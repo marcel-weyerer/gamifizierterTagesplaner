@@ -2,6 +2,7 @@ package com.example.gamifiziertertagesplaner.feature.home
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -58,6 +59,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -71,6 +73,9 @@ import com.example.gamifiziertertagesplaner.ui.theme.PriorityYellow
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+
+private val cornerRadius = 48.dp
+private val shadowElevation = 3.dp
 
 @Composable
 fun MainScreen(
@@ -266,7 +271,7 @@ private fun TopNavigationButton(
       contentColor = MaterialTheme.colorScheme.onSecondary
     ),
     elevation = ButtonDefaults.elevatedButtonElevation(
-      defaultElevation = 3.dp,
+      defaultElevation = shadowElevation,
       pressedElevation = 0.dp
     )
   ) {
@@ -316,8 +321,13 @@ private fun TaskList(
     ) {
       Spacer(modifier = Modifier.height(spacerHeight))    // Start list below the topbar
 
+      val totalPoints by viewModel.totalPoints.collectAsState()
+      val receivedPoints by viewModel.receivedPoints.collectAsState()
       // Progress bar
-      TaskProgressBar()
+      TaskProgressBar(
+        receivedPoints = receivedPoints,
+        totalPoints = totalPoints
+      )
 
       Box(
         modifier = Modifier
@@ -343,14 +353,13 @@ private fun TaskList(
           }
 
           else -> {     // Tasks found
-            val priorityGroups = remember(sortedTasks) {
-              listOf(1, 2, 3).mapNotNull { priority ->
-                val groupTasks = sortedTasks.filter { it.priority == priority }
-                if (groupTasks.isEmpty())
-                  null
-                else
-                  priority to groupTasks
-              }
+            // Split tasks into active and finished tasks
+            val (doneTasks, activeTasks) = sortedTasks.partition { it.state == 0 }
+
+            // Build priority groups only from active tasks
+            val priorityGroups = listOf(1, 2, 3).mapNotNull { priority ->
+              val groupTasks = activeTasks.filter { it.priority == priority }
+              if (groupTasks.isEmpty()) null else priority to groupTasks
             }
 
             LazyColumn(
@@ -358,8 +367,8 @@ private fun TaskList(
                 .fillMaxSize()
                 .align(Alignment.TopCenter),
             ) {
-              priorityGroups.forEachIndexed { index, (priority, groupTasks) ->
-
+              // Sections for active tasks depending on priority
+              priorityGroups.forEach { (priority, groupTasks) ->
                 // Header per priority group
                 item {
                   SectionHeader(
@@ -381,6 +390,21 @@ private fun TaskList(
                   Spacer(Modifier.height(10.dp))
                 }
               }
+
+              // Section for finished tasks
+              if (doneTasks.isNotEmpty()) {
+                item {
+                  SectionHeader(text = "Erledigt")
+                }
+
+                items(
+                  items = doneTasks,
+                  key = { it.id }
+                ) { task ->
+                  TaskView(viewModel, task) { onOpenEditTask(task) }
+                  Spacer(Modifier.height(10.dp))
+                }
+              }
             }
           }
         }
@@ -389,12 +413,40 @@ private fun TaskList(
   }
 }
 
+/**
+ * Custom composable for the progress bar.
+ * It shows the progress of the finished task by using the reveived points and the total points.
+ *
+ * @param receivedPoints  Number of received points from finished tasks.
+ * @param totalPoints     Total number of points from all tasks of the day.
+ */
 @Composable
-private fun TaskProgressBar() {
-  LinearProgressIndicator(
-    progress = { currentProgress },
-    modifier = Modifier.fillMaxWidth(),
-  )
+private fun TaskProgressBar(
+  receivedPoints: Int,
+  totalPoints: Int
+) {
+  val targetProgress = if (totalPoints > 0) (receivedPoints.toFloat() / totalPoints) else 0f
+
+  // Smooth animation between values
+  val animatedProgress by animateFloatAsState(targetValue = targetProgress)
+
+  Surface(
+    modifier = Modifier
+      .fillMaxWidth()
+      .padding(horizontal = 24.dp, vertical = 10.dp),
+    color = MaterialTheme.colorScheme.secondary,
+    shape = RoundedCornerShape(cornerRadius),
+    shadowElevation = shadowElevation
+  ) {
+    LinearProgressIndicator(
+      progress = { animatedProgress },
+      modifier = Modifier
+        .fillMaxWidth()
+        .height(24.dp),
+      color = MaterialTheme.colorScheme.onSecondary,
+      trackColor = MaterialTheme.colorScheme.secondary
+    )
+  }
 }
 
 
@@ -420,8 +472,8 @@ private fun TaskView(
       .fillMaxWidth()
       .padding(horizontal = 24.dp),
     color = MaterialTheme.colorScheme.secondary,
-    shape = RoundedCornerShape(48.dp),
-    shadowElevation = 3.dp,
+    shape = RoundedCornerShape(cornerRadius),
+    shadowElevation = shadowElevation,
     onClick = { isExpanded = !isExpanded }
   ) {
     Column(
@@ -463,6 +515,18 @@ private fun TaskView(
  */
 @Composable
 private fun MinimalInformation(task: Task, viewModel: HomeViewModel) {
+  val textColor = if (task.state == 0) {
+    MaterialTheme.colorScheme.surfaceVariant
+  } else {
+    MaterialTheme.colorScheme.onSecondary
+  }
+
+  val titleDecoration = if (task.state == 0) {
+    TextDecoration.LineThrough
+  } else {
+    TextDecoration.None
+  }
+
   Row(
     modifier = Modifier
       .fillMaxWidth()
@@ -505,7 +569,7 @@ private fun MinimalInformation(task: Task, viewModel: HomeViewModel) {
         Text(
           text = timeString,
           style = MaterialTheme.typography.bodySmall,
-          color = MaterialTheme.colorScheme.onSecondary
+          color = textColor
         )
       }
 
@@ -513,7 +577,8 @@ private fun MinimalInformation(task: Task, viewModel: HomeViewModel) {
       Text(
         text = task.title,
         style = MaterialTheme.typography.bodyLarge,
-        color = MaterialTheme.colorScheme.onSecondary
+        color = textColor,
+        textDecoration = titleDecoration
       )
     }
 
@@ -556,6 +621,12 @@ private fun MinimalInformation(task: Task, viewModel: HomeViewModel) {
  */
 @Composable
 private fun SecondaryInformation(task: Task, onOpenEditTask: (Task) -> Unit, onShowDeleteDialog: () -> Unit) {
+  val textColor = if (task.state == 0) {
+    MaterialTheme.colorScheme.surfaceVariant
+  } else {
+    MaterialTheme.colorScheme.onSecondary
+  }
+
   HorizontalDivider(
     modifier = Modifier
       .fillMaxWidth()
@@ -580,7 +651,7 @@ private fun SecondaryInformation(task: Task, onOpenEditTask: (Task) -> Unit, onS
       Text(
         text = description,
         style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSecondary
+        color = textColor
       )
     }
 
@@ -594,7 +665,7 @@ private fun SecondaryInformation(task: Task, onOpenEditTask: (Task) -> Unit, onS
         Icon(
           imageVector = Icons.Default.Notifications,
           contentDescription = null,
-          tint = MaterialTheme.colorScheme.onSecondary,
+          tint = textColor,
           modifier = Modifier.size(24.dp)
         )
 
@@ -604,7 +675,7 @@ private fun SecondaryInformation(task: Task, onOpenEditTask: (Task) -> Unit, onS
         Text(
           text = "$minutes min vorher",
           style = MaterialTheme.typography.bodyMedium,
-          color = MaterialTheme.colorScheme.onSecondary
+          color = textColor
         )
       }
     }
@@ -717,14 +788,14 @@ private fun CustomAlertDialog(task: Task, viewModel: HomeViewModel, onHideDelete
 private fun BottomAppBar(onOpenHome: () -> Unit, onOpenCreateTask: () -> Unit) {
   // Surface of BottomAppBar with rounded corners
   Surface(
-    shape = RoundedCornerShape(topStart = 48.dp, topEnd = 48.dp),
+    shape = RoundedCornerShape(topStart = cornerRadius, topEnd = cornerRadius),
     color = MaterialTheme.colorScheme.primary,
     contentColor = MaterialTheme.colorScheme.onPrimary
   ) {
     BottomAppBar(
       modifier = Modifier
         .height(80.dp)
-        .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)),
+        .clip(RoundedCornerShape(topStart = cornerRadius, topEnd = cornerRadius)),
       containerColor = Color.Transparent
     ) {
       Row(

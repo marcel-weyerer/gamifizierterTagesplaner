@@ -10,5 +10,6 @@ data class Task(
   val startTime: Timestamp? = null,
   val duration: Int? = null,
   val reminder: Int? = null,
-  val state: Int = 1
+  val state: Int = 1,
+  val points: Int = 0
 )

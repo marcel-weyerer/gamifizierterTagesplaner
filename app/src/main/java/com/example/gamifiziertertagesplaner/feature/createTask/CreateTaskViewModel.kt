@@ -7,6 +7,7 @@ import com.example.gamifiziertertagesplaner.firestore.TaskRepository
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 class CreateTaskViewModel (
   private val repository: TaskRepository = TaskRepository()
@@ -21,7 +22,8 @@ class CreateTaskViewModel (
       startTime = startTime,
       duration = duration,
       reminder = reminder,
-      state = 1
+      state = 1,
+      points = calculatePoints(priority, duration ?: 1)
     )
 
     viewModelScope.launch {
@@ -42,7 +44,8 @@ class CreateTaskViewModel (
       startTime = startTime,
       duration = duration,
       reminder = reminder,
-      state = state
+      state = state,
+      points = calculatePoints(priority, duration ?: 1)
     )
 
     viewModelScope.launch {
@@ -52,5 +55,18 @@ class CreateTaskViewModel (
         _errorMessage.value = e.message
       }
     }
+  }
+
+  private fun calculatePoints(priority: Int, durationMinutes: Int): Int {
+    val priorityFactor = when (priority) {
+      1 -> 10     // High
+      2 -> 6      // Medium
+      3 -> 3      // Low
+      else -> 1
+    }
+
+    val durationFactor = kotlin.math.sqrt(durationMinutes / 30.0)
+
+    return (priorityFactor * durationFactor * 3).roundToInt()
   }
 }

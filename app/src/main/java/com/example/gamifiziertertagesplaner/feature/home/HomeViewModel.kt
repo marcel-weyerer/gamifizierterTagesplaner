@@ -1,5 +1,6 @@
 package com.example.gamifiziertertagesplaner.feature.home
 
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gamifiziertertagesplaner.firestore.Task
@@ -28,6 +29,12 @@ class HomeViewModel (
 
   private val _errorMessage = MutableStateFlow<String?>(null)
 
+  private val _totalPoints = MutableStateFlow(0)
+  val totalPoints: StateFlow<Int> = _totalPoints
+
+  private val _receivedPoints = MutableStateFlow(0)
+  val receivedPoints: StateFlow<Int> = _receivedPoints
+
   init {
     loadTasks()
   }
@@ -39,6 +46,8 @@ class HomeViewModel (
       try {
         val result = repository.getTasks()    // retrieve all tasks
         _tasks.value = result
+
+        recalculatePoints()
       } catch (e: Exception) {
         _errorMessage.value = e.message
       } finally {
@@ -56,6 +65,8 @@ class HomeViewModel (
         if (current.id == task.id) updated else current
       }
 
+      recalculatePoints()
+
       // Update backend so there is no reload on the UI
       try {
         repository.updateTask(updated)
@@ -65,6 +76,8 @@ class HomeViewModel (
         _tasks.value = _tasks.value.map { current ->
           if (current.id == task.id) task else current
         }
+
+        recalculatePoints()
       }
     }
   }
@@ -74,6 +87,8 @@ class HomeViewModel (
       // Update UI list locally
       _tasks.value = _tasks.value.filterNot { it.id == taskId }
 
+      recalculatePoints()
+
       // Update backend so there is no reload on the UI
       try {
         repository.deleteTask(taskId)
@@ -81,5 +96,14 @@ class HomeViewModel (
         _errorMessage.value = e.message
       }
     }
+  }
+
+  private fun recalculatePoints() {
+    val currentTasks = _tasks.value
+
+    _totalPoints.value = currentTasks.sumOf { it.points }
+    _receivedPoints.value = currentTasks
+      .filter { it.state == 0 }
+      .sumOf { it.points }
   }
 }
