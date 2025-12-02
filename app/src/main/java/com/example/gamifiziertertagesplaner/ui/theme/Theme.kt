@@ -9,13 +9,20 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import com.example.gamifiziertertagesplaner.ui.theme.DarkBrown
 
 private val DarkColorScheme = darkColorScheme(
   primary = MediumBrown,
-  secondary = DarkBrown,
+  secondary = BoneWhite,
   background = Cream,
 
-  onPrimary = BoneWhite
+  onPrimary = BoneWhite,
+  onSecondary = DarkBrown,
+  onBackground = DarkBrown,
+
+  surface = DarkBrown,
+  surfaceVariant = Grey
+
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -23,7 +30,11 @@ private val LightColorScheme = lightColorScheme(
   secondary = DarkBrown,
   background = Cream,
 
-  onPrimary = BoneWhite
+  onPrimary = BoneWhite,
+  onBackground = DarkBrown,
+
+  surface = DarkBrown,
+  surfaceVariant = Grey
 )
 
 @Composable

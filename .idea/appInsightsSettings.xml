@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.example.gamifiziertertagesplaner" />
+                  <option name="mobileSdkAppId" value="1:702720748998:android:58529557b38f621082d6c7" />
+                  <option name="projectId" value="gamifizierter-tagesplaner" />
+                  <option name="projectNumber" value="702720748998" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
