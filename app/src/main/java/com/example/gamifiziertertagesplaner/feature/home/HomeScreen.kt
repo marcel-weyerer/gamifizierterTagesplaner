@@ -52,7 +52,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -64,18 +63,20 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.gamifiziertertagesplaner.R
+import com.example.gamifiziertertagesplaner.components.BottomAppBarOption
+import com.example.gamifiziertertagesplaner.components.CustomBottomAppBar
 import com.example.gamifiziertertagesplaner.components.SectionHeader
 import com.example.gamifiziertertagesplaner.firestore.Task
 import com.example.gamifiziertertagesplaner.ui.theme.MediumBrown
 import com.example.gamifiziertertagesplaner.ui.theme.PriorityOrange
 import com.example.gamifiziertertagesplaner.ui.theme.PriorityRed
 import com.example.gamifiziertertagesplaner.ui.theme.PriorityYellow
+import com.example.gamifiziertertagesplaner.ui.theme.cornerRadius
+import com.example.gamifiziertertagesplaner.ui.theme.shadowElevation
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private val cornerRadius = 48.dp
-private val shadowElevation = 3.dp
 
 @Composable
 fun MainScreen(
@@ -85,7 +86,36 @@ fun MainScreen(
   onOpenEditTask: (Task) -> Unit
 ) {
   Scaffold(
-    bottomBar = { BottomAppBar(onOpenHome, onOpenCreateTask) }
+    bottomBar = {
+      CustomBottomAppBar(
+        options = listOf(
+          BottomAppBarOption(
+            icon = Icons.Filled.Settings,
+            tint = MaterialTheme.colorScheme.onPrimary,
+            contentDescription = "Settings",
+            onClick = onOpenCreateTask
+          ),
+          BottomAppBarOption(
+            icon = Icons.Filled.Home,
+            tint = MaterialTheme.colorScheme.surface,
+            contentDescription = "Home",
+            onClick = onOpenHome
+          ),
+          BottomAppBarOption(
+            icon = Icons.Filled.Timer,
+            tint = MaterialTheme.colorScheme.onPrimary,
+            contentDescription = "Pomodoro",
+            onClick = onOpenCreateTask
+          ),
+          BottomAppBarOption(
+            icon = Icons.Filled.Book,
+            tint = MaterialTheme.colorScheme.onPrimary,
+            contentDescription = "Bücherregal",
+            onClick = onOpenCreateTask
+          )
+        )
+      )
+    }
   ) { innerPadding ->
     HomeScreenContent(innerPadding, viewModel, onOpenCreateTask, onOpenEditTask)
   }
@@ -324,10 +354,12 @@ private fun TaskList(
       val totalPoints by viewModel.totalPoints.collectAsState()
       val receivedPoints by viewModel.receivedPoints.collectAsState()
       // Progress bar
-      TaskProgressBar(
-        receivedPoints = receivedPoints,
-        totalPoints = totalPoints
-      )
+      if (hasTasks) {
+        TaskProgressBar(
+          receivedPoints = receivedPoints,
+          totalPoints = totalPoints
+        )
+      }
 
       Box(
         modifier = Modifier
@@ -775,66 +807,6 @@ private fun CustomAlertDialog(task: Task, viewModel: HomeViewModel, onHideDelete
     },
     containerColor = MaterialTheme.colorScheme.primary
   )
-}
-
-
-/**
- * Bottom app bar used for navigating between the main sections of the app.
- *
- * @param onOpenHome          Callback invoked when the Home button is pressed.
- * @param onOpenCreateTask    Callback invoked when the CreateTask button is pressed.
- */
-@Composable
-private fun BottomAppBar(onOpenHome: () -> Unit, onOpenCreateTask: () -> Unit) {
-  // Surface of BottomAppBar with rounded corners
-  Surface(
-    shape = RoundedCornerShape(topStart = cornerRadius, topEnd = cornerRadius),
-    color = MaterialTheme.colorScheme.primary,
-    contentColor = MaterialTheme.colorScheme.onPrimary
-  ) {
-    BottomAppBar(
-      modifier = Modifier
-        .height(80.dp)
-        .clip(RoundedCornerShape(topStart = cornerRadius, topEnd = cornerRadius)),
-      containerColor = Color.Transparent
-    ) {
-      Row(
-        Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically
-      ) {
-        IconButton(onClick = onOpenCreateTask) {      // Settings Screen
-          Icon(
-            modifier = Modifier.size(32.dp),
-            imageVector = Icons.Filled.Settings,
-            contentDescription = "Settings"
-          )
-        }
-        IconButton(onClick = onOpenHome) {            // Home Screen
-          Icon(
-            modifier = Modifier.size(32.dp),
-            imageVector = Icons.Filled.Home,
-            contentDescription = "Home",
-            tint = MaterialTheme.colorScheme.surface
-          )
-        }
-        IconButton(onClick = onOpenCreateTask) {      // Pomodoro Screen
-          Icon(
-            modifier = Modifier.size(32.dp),
-            imageVector = Icons.Filled.Timer,
-            contentDescription = "Pomodoro"
-          )
-        }
-        IconButton(onClick = onOpenCreateTask) {      // Bookshelf Screen
-          Icon(
-            modifier = Modifier.size(32.dp),
-            imageVector = Icons.Filled.Book,
-            contentDescription = "Bückerregal"
-          )
-        }
-      }
-    }
-  }
 }
 
 private fun buildTimeString(task: Task): String {

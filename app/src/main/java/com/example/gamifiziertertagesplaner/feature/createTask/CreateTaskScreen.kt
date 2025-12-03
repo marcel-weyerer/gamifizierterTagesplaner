@@ -62,6 +62,8 @@ import com.example.gamifiziertertagesplaner.firestore.Task
 import com.example.gamifiziertertagesplaner.ui.theme.PriorityRed
 import com.example.gamifiziertertagesplaner.ui.theme.PriorityOrange
 import com.example.gamifiziertertagesplaner.ui.theme.PriorityYellow
+import com.example.gamifiziertertagesplaner.ui.theme.cornerRadius
+import com.example.gamifiziertertagesplaner.ui.theme.shadowElevation
 import com.google.firebase.Timestamp
 import java.time.Instant
 import java.time.LocalDate
@@ -69,10 +71,6 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 import java.util.Locale
-
-
-private val cornerRadius = 48.dp
-private val shadowElevation = 3.dp
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
