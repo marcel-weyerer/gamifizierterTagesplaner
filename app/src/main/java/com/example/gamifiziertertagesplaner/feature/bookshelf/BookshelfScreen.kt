@@ -18,7 +18,7 @@ import com.example.gamifiziertertagesplaner.components.CustomBottomAppBar
 fun BookshelfScreen(
   onOpenHome: () -> Unit,
   onOpenAchievements: () -> Unit,
-  onOpenCreateTask: () -> Unit,
+  onOpenShop: () -> Unit,
 ) {
   Scaffold(
     bottomBar = {
@@ -27,7 +27,7 @@ fun BookshelfScreen(
           BottomAppBarOption(
             icon = painterResource(R.drawable.trophy),
             tint = MaterialTheme.colorScheme.onPrimary,
-            contentDescription = "Settings",
+            contentDescription = "Achievements",
             onClick = onOpenAchievements
           ),
           BottomAppBarOption(
@@ -39,8 +39,8 @@ fun BookshelfScreen(
           BottomAppBarOption(
             icon = painterResource(R.drawable.shopping_cart),
             tint = MaterialTheme.colorScheme.onPrimary,
-            contentDescription = "Pomodoro",
-            onClick = onOpenCreateTask
+            contentDescription = "Shop",
+            onClick = onOpenShop
           ),
         )
       )

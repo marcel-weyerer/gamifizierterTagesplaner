@@ -6,4 +6,5 @@ object Routes {
   const val EDIT_TASK = "editTask"
   const val BOOKSHELF = "bookshelf"
   const val ACHIEVEMENTS = "achievements"
+  const val SHOP = "shop"
 }

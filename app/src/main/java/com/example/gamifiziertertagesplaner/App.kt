@@ -12,6 +12,7 @@ import com.example.gamifiziertertagesplaner.feature.achievements.AchievementsScr
 import com.example.gamifiziertertagesplaner.feature.bookshelf.BookshelfScreen
 import com.example.gamifiziertertagesplaner.feature.createTask.CreateTaskScreen
 import com.example.gamifiziertertagesplaner.feature.home.MainScreen
+import com.example.gamifiziertertagesplaner.feature.shop.ShopScreen
 import com.example.gamifiziertertagesplaner.firestore.Task
 import com.example.gamifiziertertagesplaner.navigation.Routes
 
@@ -65,7 +66,7 @@ fun App() {
       BookshelfScreen(
         onOpenHome = { navController.navigate(Routes.HOME) },
         onOpenAchievements = { navController.navigate(Routes.ACHIEVEMENTS) },
-        onOpenCreateTask = { navController.navigate(Routes.CREATE_TASK) }
+        onOpenShop = { navController.navigate(Routes.SHOP) }
       )
     }
 
@@ -73,7 +74,15 @@ fun App() {
       AchievementsScreen(
         onOpenBookshelf = { navController.navigate(Routes.BOOKSHELF) },
         onOpenAchievements = { navController.navigate(Routes.ACHIEVEMENTS) },
-        onOpenCreateTask = { navController.navigate(Routes.CREATE_TASK) }
+        onOpenShop = { navController.navigate(Routes.SHOP) }
+      )
+    }
+
+    composable(Routes.SHOP) {    // Shop Screen
+      ShopScreen(
+        onOpenBookshelf = { navController.navigate(Routes.BOOKSHELF) },
+        onOpenAchievements = { navController.navigate(Routes.ACHIEVEMENTS) },
+        onOpenShop = { navController.navigate(Routes.SHOP) }
       )
     }
   }

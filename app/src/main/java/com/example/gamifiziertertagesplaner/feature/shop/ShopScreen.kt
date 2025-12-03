@@ -1,4 +1,4 @@
-package com.example.gamifiziertertagesplaner.feature.achievements
+package com.example.gamifiziertertagesplaner.feature.shop
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,10 +15,10 @@ import com.example.gamifiziertertagesplaner.components.BottomAppBarOption
 import com.example.gamifiziertertagesplaner.components.CustomBottomAppBar
 
 @Composable
-fun AchievementsScreen(
+fun ShopScreen(
   onOpenBookshelf: () -> Unit,
   onOpenAchievements: () -> Unit,
-  onOpenShop: () -> Unit,
+  onOpenShop: () -> Unit
 ) {
   Scaffold(
     bottomBar = {
@@ -26,7 +26,7 @@ fun AchievementsScreen(
         options = listOf(
           BottomAppBarOption(
             icon = painterResource(R.drawable.trophy),
-            tint = MaterialTheme.colorScheme.surface,
+            tint = MaterialTheme.colorScheme.onPrimary,
             contentDescription = "Achievements",
             onClick = onOpenAchievements
           ),
@@ -38,7 +38,7 @@ fun AchievementsScreen(
           ),
           BottomAppBarOption(
             icon = painterResource(R.drawable.shopping_cart),
-            tint = MaterialTheme.colorScheme.onPrimary,
+            tint = MaterialTheme.colorScheme.surface,
             contentDescription = "Shop",
             onClick = onOpenShop
           ),
@@ -53,7 +53,7 @@ fun AchievementsScreen(
       contentAlignment = Alignment.Center
     ) {
       Text(
-        text = "Achievements",
+        text = "Shop",
         style = MaterialTheme.typography.bodyLarge,
         color = MaterialTheme.colorScheme.onBackground
       )

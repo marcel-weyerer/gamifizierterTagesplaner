@@ -22,12 +22,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -52,7 +49,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -191,7 +188,7 @@ private fun TopAppBar(
         buttonSize = 100.dp,
         offsetX = 0.dp,
         offsetY = 0.dp,
-        icon = Icons.Filled.Add,
+        icon = painterResource(R.drawable.plus),
         iconSize = 48.dp
       )
 
@@ -202,7 +199,7 @@ private fun TopAppBar(
         buttonSize = 50.dp,
         offsetX = -offsetX,
         offsetY = offsetY,
-        icon = Icons.Filled.Settings,
+        icon = painterResource(R.drawable.gear),
         iconSize = 30.dp
       )
 
@@ -213,7 +210,7 @@ private fun TopAppBar(
         buttonSize = 50.dp,
         offsetX = offsetX,
         offsetY = offsetY,
-        icon = Icons.Filled.Book,
+        icon = painterResource(R.drawable.book),
         iconSize = 30.dp
       )
     }
@@ -287,7 +284,7 @@ private fun TopNavigationButton(
   buttonSize: Dp,
   offsetX: Dp,
   offsetY: Dp,
-  icon: ImageVector,
+  icon: Painter,
   iconSize: Dp
 ) {
   ElevatedButton(
@@ -307,7 +304,7 @@ private fun TopNavigationButton(
   ) {
     Icon(
       modifier = Modifier.size(iconSize),
-      imageVector = icon,
+      painter = icon,
       contentDescription = null
     )
   }
