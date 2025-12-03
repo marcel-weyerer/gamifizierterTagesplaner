@@ -1,4 +1,4 @@
-package com.example.gamifiziertertagesplaner.feature.bookshelf
+package com.example.gamifiziertertagesplaner.feature.achievements
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,8 +15,8 @@ import com.example.gamifiziertertagesplaner.components.BottomAppBarOption
 import com.example.gamifiziertertagesplaner.components.CustomBottomAppBar
 
 @Composable
-fun BookshelfScreen(
-  onOpenHome: () -> Unit,
+fun AchievementsScreen(
+  onOpenBookshelf: () -> Unit,
   onOpenAchievements: () -> Unit,
   onOpenCreateTask: () -> Unit,
 ) {
@@ -26,7 +26,7 @@ fun BookshelfScreen(
         options = listOf(
           BottomAppBarOption(
             icon = painterResource(R.drawable.trophy),
-            tint = MaterialTheme.colorScheme.onPrimary,
+            tint = MaterialTheme.colorScheme.surface,
             contentDescription = "Settings",
             onClick = onOpenAchievements
           ),
@@ -34,7 +34,7 @@ fun BookshelfScreen(
             icon = painterResource(R.drawable.check_list),
             tint = MaterialTheme.colorScheme.onPrimary,
             contentDescription = "Home",
-            onClick = onOpenHome
+            onClick = onOpenBookshelf
           ),
           BottomAppBarOption(
             icon = painterResource(R.drawable.shopping_cart),
@@ -53,7 +53,7 @@ fun BookshelfScreen(
       contentAlignment = Alignment.Center
     ) {
       Text(
-        text = "Bookshelf",
+        text = "Achievements",
         style = MaterialTheme.typography.bodyLarge,
         color = MaterialTheme.colorScheme.onBackground
       )
