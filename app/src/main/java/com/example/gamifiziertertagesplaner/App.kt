@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.navigation.compose.*
+import com.example.gamifiziertertagesplaner.feature.bookshelf.BookshelfScreen
 import com.example.gamifiziertertagesplaner.feature.createTask.CreateTaskScreen
 import com.example.gamifiziertertagesplaner.feature.home.MainScreen
 import com.example.gamifiziertertagesplaner.firestore.Task
@@ -33,7 +34,8 @@ fun App() {
           taskToEdit = task              // store the task to edit
           navController.navigate(Routes.EDIT_TASK)
         },
-        onOpenHome = { navController.navigate(Routes.HOME) }
+        onOpenHome = { navController.navigate(Routes.HOME) },
+        onOpenBookshelf = { navController.navigate(Routes.BOOKSHELF) }
       )
     }
     composable(Routes.CREATE_TASK) {  // Create Task Screen
@@ -54,6 +56,13 @@ fun App() {
             popUpTo(Routes.HOME) { inclusive = true }
           }
         }
+      )
+    }
+
+    composable(Routes.BOOKSHELF) {    // Bookshelf Screen
+      BookshelfScreen(
+        onOpenHome = { navController.navigate(Routes.HOME) },
+        onOpenCreateTask = { navController.navigate(Routes.CREATE_TASK) }
       )
     }
   }

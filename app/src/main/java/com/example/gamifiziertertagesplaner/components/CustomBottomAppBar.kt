@@ -42,7 +42,7 @@ fun CustomBottomAppBar(options: List<BottomAppBarOption>) {
           IconButton(onClick = option.onClick) {
             Icon(
               modifier = Modifier.size(32.dp),
-              imageVector = option.icon,
+              painter = option.icon,
               contentDescription = option.contentDescription,
               tint = option.tint
             )

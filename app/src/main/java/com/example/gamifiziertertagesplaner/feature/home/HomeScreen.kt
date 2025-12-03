@@ -26,12 +26,9 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -83,41 +80,42 @@ fun MainScreen(
   viewModel: HomeViewModel = viewModel(),
   onOpenHome: () -> Unit,
   onOpenCreateTask: () -> Unit,
-  onOpenEditTask: (Task) -> Unit
+  onOpenEditTask: (Task) -> Unit,
+  onOpenBookshelf: () -> Unit
 ) {
   Scaffold(
     bottomBar = {
       CustomBottomAppBar(
         options = listOf(
           BottomAppBarOption(
-            icon = Icons.Filled.Settings,
+            icon = painterResource(R.drawable.gear),
             tint = MaterialTheme.colorScheme.onPrimary,
             contentDescription = "Settings",
             onClick = onOpenCreateTask
           ),
           BottomAppBarOption(
-            icon = Icons.Filled.Home,
+            icon = painterResource(R.drawable.home),
             tint = MaterialTheme.colorScheme.surface,
             contentDescription = "Home",
             onClick = onOpenHome
           ),
           BottomAppBarOption(
-            icon = Icons.Filled.Timer,
+            icon = painterResource(R.drawable.timer),
             tint = MaterialTheme.colorScheme.onPrimary,
             contentDescription = "Pomodoro",
             onClick = onOpenCreateTask
           ),
           BottomAppBarOption(
-            icon = Icons.Filled.Book,
+            icon = painterResource(R.drawable.book),
             tint = MaterialTheme.colorScheme.onPrimary,
             contentDescription = "Bücherregal",
-            onClick = onOpenCreateTask
+            onClick = onOpenBookshelf
           )
         )
       )
     }
   ) { innerPadding ->
-    HomeScreenContent(innerPadding, viewModel, onOpenCreateTask, onOpenEditTask)
+    HomeScreenContent(innerPadding, viewModel, onOpenCreateTask, onOpenEditTask, onOpenBookshelf)
   }
 }
 
@@ -129,7 +127,8 @@ private fun HomeScreenContent(
   innerPadding: PaddingValues,
   viewModel: HomeViewModel,
   onOpenCreateTask: () -> Unit,
-  onOpenEditTask: (Task) -> Unit
+  onOpenEditTask: (Task) -> Unit,
+  onOpenBookshelf: () -> Unit
 ) {
   val tasks by viewModel.tasks.collectAsState()     // List of all tasks
   val hasTasks = tasks.isNotEmpty()     // Flag if there are tasks
@@ -139,7 +138,7 @@ private fun HomeScreenContent(
     label = "circleOffset"
   )
 
-  TopAppBar(circleOffsetY, innerPadding, viewModel, onOpenCreateTask)
+  TopAppBar(circleOffsetY, innerPadding, viewModel, onOpenCreateTask, onOpenBookshelf)
 
   TaskList(circleOffsetY, innerPadding, viewModel, onOpenEditTask)
 }
@@ -152,7 +151,8 @@ private fun TopAppBar(
   circleOffsetY: Dp,
   innerPadding: PaddingValues,
   viewModel: HomeViewModel,
-  onOpenCreateTask: () -> Unit
+  onOpenCreateTask: () -> Unit,
+  onOpenBookshelf: () -> Unit
 ) {
   BoxWithConstraints(
     modifier = Modifier
@@ -208,7 +208,7 @@ private fun TopAppBar(
 
       // Bookshelf
       TopNavigationButton(
-        onOpenPage = onOpenCreateTask,
+        onOpenPage = onOpenBookshelf,
         modifier = Modifier.align(Alignment.Center),
         buttonSize = 50.dp,
         offsetX = offsetX,
