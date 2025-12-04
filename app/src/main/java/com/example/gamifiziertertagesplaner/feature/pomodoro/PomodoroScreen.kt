@@ -1,4 +1,4 @@
-package com.example.gamifiziertertagesplaner.feature.settings
+package com.example.gamifiziertertagesplaner.feature.pomodoro
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,7 +15,7 @@ import com.example.gamifiziertertagesplaner.components.BottomAppBarOption
 import com.example.gamifiziertertagesplaner.components.CustomBottomAppBar
 
 @Composable
-fun SettingsScreen(
+fun PomodoroScreen(
   onOpenHome: () -> Unit
 ) {
   Scaffold(
@@ -23,17 +23,17 @@ fun SettingsScreen(
       CustomBottomAppBar(
         options = listOf(
           BottomAppBarOption(
-            icon = painterResource(R.drawable.gear),
-            tint = MaterialTheme.colorScheme.surface,
-            contentDescription = "Home",
-            onClick = {}
-          ),
-          BottomAppBarOption(
             icon = painterResource(R.drawable.home),
             tint = MaterialTheme.colorScheme.onPrimary,
             contentDescription = "Home",
             onClick = onOpenHome
-          )
+          ),
+          BottomAppBarOption(
+            icon = painterResource(R.drawable.timer),
+            tint = MaterialTheme.colorScheme.surface,
+            contentDescription = "Shop",
+            onClick = {}
+          ),
         )
       )
     }
@@ -45,7 +45,7 @@ fun SettingsScreen(
       contentAlignment = Alignment.Center
     ) {
       Text(
-        text = "Settings",
+        text = "Pomodoro",
         style = MaterialTheme.typography.bodyLarge,
         color = MaterialTheme.colorScheme.onBackground
       )

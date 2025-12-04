@@ -12,6 +12,7 @@ import com.example.gamifiziertertagesplaner.feature.achievements.AchievementsScr
 import com.example.gamifiziertertagesplaner.feature.bookshelf.BookshelfScreen
 import com.example.gamifiziertertagesplaner.feature.createTask.CreateTaskScreen
 import com.example.gamifiziertertagesplaner.feature.home.MainScreen
+import com.example.gamifiziertertagesplaner.feature.pomodoro.PomodoroScreen
 import com.example.gamifiziertertagesplaner.feature.settings.SettingsScreen
 import com.example.gamifiziertertagesplaner.feature.shop.ShopScreen
 import com.example.gamifiziertertagesplaner.firestore.Task
@@ -39,7 +40,8 @@ fun App() {
         },
         onOpenHome = { navController.navigate(Routes.HOME) },
         onOpenBookshelf = { navController.navigate(Routes.BOOKSHELF) },
-        onOpenSettings = { navController.navigate(Routes.SETTINGS) }
+        onOpenSettings = { navController.navigate(Routes.SETTINGS) },
+        onOpenPomodoro = { navController.navigate(Routes.POMODORO) }
       )
     }
 
@@ -75,7 +77,6 @@ fun App() {
     composable(Routes.ACHIEVEMENTS) {    // Achievements Screen
       AchievementsScreen(
         onOpenBookshelf = { navController.navigate(Routes.BOOKSHELF) },
-        onOpenAchievements = { navController.navigate(Routes.ACHIEVEMENTS) },
         onOpenShop = { navController.navigate(Routes.SHOP) }
       )
     }
@@ -83,13 +84,18 @@ fun App() {
     composable(Routes.SHOP) {    // Shop Screen
       ShopScreen(
         onOpenBookshelf = { navController.navigate(Routes.BOOKSHELF) },
-        onOpenAchievements = { navController.navigate(Routes.ACHIEVEMENTS) },
-        onOpenShop = { navController.navigate(Routes.SHOP) }
+        onOpenAchievements = { navController.navigate(Routes.ACHIEVEMENTS) }
       )
     }
 
     composable(Routes.SETTINGS) {    // Settings Screen
       SettingsScreen(
+        onOpenHome = { navController.navigate(Routes.HOME) }
+      )
+    }
+
+    composable(Routes.POMODORO) {    // Pomodoro Screen
+      PomodoroScreen(
         onOpenHome = { navController.navigate(Routes.HOME) }
       )
     }

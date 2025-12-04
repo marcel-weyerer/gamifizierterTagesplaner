@@ -17,8 +17,7 @@ import com.example.gamifiziertertagesplaner.components.CustomBottomAppBar
 @Composable
 fun ShopScreen(
   onOpenBookshelf: () -> Unit,
-  onOpenAchievements: () -> Unit,
-  onOpenShop: () -> Unit
+  onOpenAchievements: () -> Unit
 ) {
   Scaffold(
     bottomBar = {
@@ -40,7 +39,7 @@ fun ShopScreen(
             icon = painterResource(R.drawable.shopping_cart),
             tint = MaterialTheme.colorScheme.surface,
             contentDescription = "Shop",
-            onClick = onOpenShop
+            onClick = {}
           ),
         )
       )

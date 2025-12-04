@@ -79,7 +79,8 @@ fun MainScreen(
   onOpenCreateTask: () -> Unit,
   onOpenEditTask: (Task) -> Unit,
   onOpenBookshelf: () -> Unit,
-  onOpenSettings: () -> Unit
+  onOpenSettings: () -> Unit,
+  onOpenPomodoro: () -> Unit
 ) {
   Scaffold(
     bottomBar = {
@@ -101,7 +102,7 @@ fun MainScreen(
             icon = painterResource(R.drawable.timer),
             tint = MaterialTheme.colorScheme.onPrimary,
             contentDescription = "Pomodoro",
-            onClick = onOpenCreateTask
+            onClick = onOpenPomodoro
           ),
           BottomAppBarOption(
             icon = painterResource(R.drawable.book),

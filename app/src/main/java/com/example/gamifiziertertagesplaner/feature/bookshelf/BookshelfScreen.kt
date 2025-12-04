@@ -31,7 +31,7 @@ fun BookshelfScreen(
             onClick = onOpenAchievements
           ),
           BottomAppBarOption(
-            icon = painterResource(R.drawable.check_list),
+            icon = painterResource(R.drawable.home),
             tint = MaterialTheme.colorScheme.onPrimary,
             contentDescription = "Home",
             onClick = onOpenHome

@@ -17,8 +17,7 @@ import com.example.gamifiziertertagesplaner.components.CustomBottomAppBar
 @Composable
 fun AchievementsScreen(
   onOpenBookshelf: () -> Unit,
-  onOpenAchievements: () -> Unit,
-  onOpenShop: () -> Unit,
+  onOpenShop: () -> Unit
 ) {
   Scaffold(
     bottomBar = {
@@ -28,7 +27,7 @@ fun AchievementsScreen(
             icon = painterResource(R.drawable.trophy),
             tint = MaterialTheme.colorScheme.surface,
             contentDescription = "Achievements",
-            onClick = onOpenAchievements
+            onClick = {}
           ),
           BottomAppBarOption(
             icon = painterResource(R.drawable.book),

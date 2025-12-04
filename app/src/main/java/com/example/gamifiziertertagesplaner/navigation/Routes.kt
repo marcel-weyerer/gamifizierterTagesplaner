@@ -8,4 +8,5 @@ object Routes {
   const val ACHIEVEMENTS = "achievements"
   const val SHOP = "shop"
   const val SETTINGS = "settings"
+  const val POMODORO = "pomodoro"
 }
