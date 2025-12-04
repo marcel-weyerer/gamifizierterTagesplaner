@@ -78,7 +78,8 @@ fun MainScreen(
   onOpenHome: () -> Unit,
   onOpenCreateTask: () -> Unit,
   onOpenEditTask: (Task) -> Unit,
-  onOpenBookshelf: () -> Unit
+  onOpenBookshelf: () -> Unit,
+  onOpenSettings: () -> Unit
 ) {
   Scaffold(
     bottomBar = {
@@ -88,7 +89,7 @@ fun MainScreen(
             icon = painterResource(R.drawable.gear),
             tint = MaterialTheme.colorScheme.onPrimary,
             contentDescription = "Settings",
-            onClick = onOpenCreateTask
+            onClick = onOpenSettings
           ),
           BottomAppBarOption(
             icon = painterResource(R.drawable.home),
@@ -112,7 +113,7 @@ fun MainScreen(
       )
     }
   ) { innerPadding ->
-    HomeScreenContent(innerPadding, viewModel, onOpenCreateTask, onOpenEditTask, onOpenBookshelf)
+    HomeScreenContent(innerPadding, viewModel, onOpenCreateTask, onOpenEditTask, onOpenBookshelf, onOpenSettings)
   }
 }
 
@@ -125,7 +126,8 @@ private fun HomeScreenContent(
   viewModel: HomeViewModel,
   onOpenCreateTask: () -> Unit,
   onOpenEditTask: (Task) -> Unit,
-  onOpenBookshelf: () -> Unit
+  onOpenBookshelf: () -> Unit,
+  onOpenSettings: () -> Unit
 ) {
   val tasks by viewModel.tasks.collectAsState()     // List of all tasks
   val hasTasks = tasks.isNotEmpty()     // Flag if there are tasks
@@ -135,7 +137,7 @@ private fun HomeScreenContent(
     label = "circleOffset"
   )
 
-  TopAppBar(circleOffsetY, innerPadding, viewModel, onOpenCreateTask, onOpenBookshelf)
+  TopAppBar(circleOffsetY, innerPadding, viewModel, onOpenCreateTask, onOpenBookshelf, onOpenSettings)
 
   TaskList(circleOffsetY, innerPadding, viewModel, onOpenEditTask)
 }
@@ -149,7 +151,8 @@ private fun TopAppBar(
   innerPadding: PaddingValues,
   viewModel: HomeViewModel,
   onOpenCreateTask: () -> Unit,
-  onOpenBookshelf: () -> Unit
+  onOpenBookshelf: () -> Unit,
+  onOpenSettings: () -> Unit
 ) {
   BoxWithConstraints(
     modifier = Modifier
@@ -194,7 +197,7 @@ private fun TopAppBar(
 
       // Settings
       TopNavigationButton(
-        onOpenPage = onOpenCreateTask,
+        onOpenPage = onOpenSettings,
         modifier = Modifier.align(Alignment.Center),
         buttonSize = 50.dp,
         offsetX = -offsetX,

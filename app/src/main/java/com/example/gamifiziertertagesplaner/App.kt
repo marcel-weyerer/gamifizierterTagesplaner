@@ -12,6 +12,7 @@ import com.example.gamifiziertertagesplaner.feature.achievements.AchievementsScr
 import com.example.gamifiziertertagesplaner.feature.bookshelf.BookshelfScreen
 import com.example.gamifiziertertagesplaner.feature.createTask.CreateTaskScreen
 import com.example.gamifiziertertagesplaner.feature.home.MainScreen
+import com.example.gamifiziertertagesplaner.feature.settings.SettingsScreen
 import com.example.gamifiziertertagesplaner.feature.shop.ShopScreen
 import com.example.gamifiziertertagesplaner.firestore.Task
 import com.example.gamifiziertertagesplaner.navigation.Routes
@@ -37,7 +38,8 @@ fun App() {
           navController.navigate(Routes.EDIT_TASK)
         },
         onOpenHome = { navController.navigate(Routes.HOME) },
-        onOpenBookshelf = { navController.navigate(Routes.BOOKSHELF) }
+        onOpenBookshelf = { navController.navigate(Routes.BOOKSHELF) },
+        onOpenSettings = { navController.navigate(Routes.SETTINGS) }
       )
     }
 
@@ -83,6 +85,12 @@ fun App() {
         onOpenBookshelf = { navController.navigate(Routes.BOOKSHELF) },
         onOpenAchievements = { navController.navigate(Routes.ACHIEVEMENTS) },
         onOpenShop = { navController.navigate(Routes.SHOP) }
+      )
+    }
+
+    composable(Routes.SETTINGS) {    // Settings Screen
+      SettingsScreen(
+        onOpenHome = { navController.navigate(Routes.HOME) }
       )
     }
   }
