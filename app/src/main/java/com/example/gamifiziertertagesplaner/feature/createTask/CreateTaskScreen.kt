@@ -7,7 +7,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -28,8 +26,6 @@ import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.Timelapse
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -38,8 +34,6 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerDefaults
 import androidx.compose.material3.TimePickerState
@@ -57,7 +51,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.gamifiziertertagesplaner.components.ActionButton
 import com.example.gamifiziertertagesplaner.components.SectionHeader
+import com.example.gamifiziertertagesplaner.components.TextInputField
 import com.example.gamifiziertertagesplaner.firestore.Task
 import com.example.gamifiziertertagesplaner.ui.theme.PriorityRed
 import com.example.gamifiziertertagesplaner.ui.theme.PriorityOrange
@@ -212,6 +208,7 @@ fun CreateTaskScreen(
         // Cancel button
         ActionButton(
           onClick = onCancel,
+          width = 140.dp,
           text = "Abbrechen"
         )
 
@@ -249,60 +246,12 @@ fun CreateTaskScreen(
 
             onCancel()    // Return to home screen
           },
+          width = 140.dp,
           text = "Speichern",
           isPrimary = true
         )
       }
     }
-  }
-}
-
-/**
- * Reusable text input field
- *
- * @param state          The state of the text field
- * @param maxHeightLines The maximum number of lines the text field should have
- * @param placeholder    The text to display in the text field
- */
-@Composable
-private fun TextInputField(
-  modifier: Modifier = Modifier,
-  state: TextFieldState,
-  maxHeightLines: Int,
-  placeholder: String
-) {
-  Surface(
-    modifier = modifier,
-    color = MaterialTheme.colorScheme.secondary,
-    shape = RoundedCornerShape(cornerRadius),
-    shadowElevation = shadowElevation
-  ) {
-    TextField(
-      state = state,
-      modifier = Modifier
-        .fillMaxWidth()
-        .padding(10.dp),
-      textStyle = MaterialTheme.typography.bodyMedium,
-      placeholder = {
-        Text(
-          text = placeholder,
-          style = MaterialTheme.typography.bodyMedium,
-          color = MaterialTheme.colorScheme.surfaceVariant
-        )
-      },
-      lineLimits = TextFieldLineLimits.MultiLine(
-        minHeightInLines = 1,
-        maxHeightInLines = maxHeightLines
-      ),
-      colors = TextFieldDefaults.colors(
-        focusedContainerColor = Color.Transparent,
-        unfocusedContainerColor = Color.Transparent,
-        focusedIndicatorColor = MaterialTheme.colorScheme.surfaceVariant,
-        unfocusedIndicatorColor = Color.Transparent,
-        focusedTextColor = MaterialTheme.colorScheme.onSecondary,
-        unfocusedTextColor = MaterialTheme.colorScheme.onSecondary
-      )
-    )
   }
 }
 
@@ -637,47 +586,6 @@ private fun PickerOptionRow(
       text = text,
       style = MaterialTheme.typography.bodyMedium,
       color = MaterialTheme.colorScheme.onSecondary
-    )
-  }
-}
-
-
-/**
- * Reusable action button
- *
- * @param onClick        The callback to be invoked when the button is clicked
- * @param text           The text to be displayed on the button
- * @param isPrimary      Whether the button should be primary or secondary
- */
-@Composable
-private fun ActionButton(onClick: () -> Unit, text: String, isPrimary: Boolean = false) {
-  var containerColor: Color
-  var contentColor: Color
-
-  if (isPrimary) {
-    containerColor = MaterialTheme.colorScheme.primary
-    contentColor = MaterialTheme.colorScheme.onPrimary
-  } else {
-    containerColor = MaterialTheme.colorScheme.secondary
-    contentColor = MaterialTheme.colorScheme.onSecondary
-  }
-
-  ElevatedButton(
-    onClick = onClick,
-    contentPadding = PaddingValues(vertical = 16.dp, horizontal = 24.dp),
-    shape = RoundedCornerShape(cornerRadius),
-    elevation = ButtonDefaults.elevatedButtonElevation(
-      defaultElevation = shadowElevation,
-      pressedElevation = 0.dp,
-    ),
-    colors = ButtonDefaults.buttonColors(
-        containerColor = containerColor,
-        contentColor = contentColor
-    )
-  ) {
-    Text(
-      text = text,
-      style = MaterialTheme.typography.bodyMedium,
     )
   }
 }

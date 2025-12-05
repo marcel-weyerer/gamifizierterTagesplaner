@@ -12,6 +12,7 @@ import com.example.gamifiziertertagesplaner.feature.achievements.AchievementsScr
 import com.example.gamifiziertertagesplaner.feature.bookshelf.BookshelfScreen
 import com.example.gamifiziertertagesplaner.feature.createTask.CreateTaskScreen
 import com.example.gamifiziertertagesplaner.feature.home.MainScreen
+import com.example.gamifiziertertagesplaner.feature.login.LoginScreen
 import com.example.gamifiziertertagesplaner.feature.pomodoro.PomodoroScreen
 import com.example.gamifiziertertagesplaner.feature.settings.SettingsScreen
 import com.example.gamifiziertertagesplaner.feature.shop.ShopScreen
@@ -29,8 +30,14 @@ fun App() {
 
   NavHost(
     navController = navController,
-    startDestination = Routes.HOME
+    startDestination = Routes.LOGIN
   ) {
+    composable(Routes.LOGIN) {        // Login Screen
+      LoginScreen(
+        onOpenHome = { navController.navigate(Routes.HOME) }
+      )
+    }
+
     composable(Routes.HOME) {         // Home Screen
       MainScreen(
         onOpenCreateTask = { navController.navigate(Routes.CREATE_TASK) },

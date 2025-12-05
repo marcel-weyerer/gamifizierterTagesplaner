@@ -42,7 +42,7 @@ fun ShopScreen(
   ) { innerPadding ->
     TopScreenTitle(
       innerPadding = innerPadding,
-      title = "Shop"
+      title = "Buchladen"
     )
   }
 }
