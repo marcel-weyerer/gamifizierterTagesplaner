@@ -9,5 +9,5 @@ val BoneWhite = Color(0xFFF9F6EE)
 val Grey = Color(0xFFC2BCB2)
 
 val PriorityRed = Color(0xFFA7362E)
-val PriorityOrange = Color(0xFFD86F2D)
+val PriorityOrange = Color(0xFFD07E42)
 val PriorityYellow = Color(0xFFF5C156)

@@ -28,7 +28,7 @@ import com.example.gamifiziertertagesplaner.ui.theme.shadowElevation
 fun TextInputField(
   modifier: Modifier = Modifier,
   state: TextFieldState,
-  maxHeightLines: Int,
+  maxHeightLines: Int = 1,
   placeholder: String
 ) {
   Surface(

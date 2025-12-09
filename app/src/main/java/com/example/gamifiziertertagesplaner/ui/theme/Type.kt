@@ -46,20 +46,20 @@ val Typography = Typography(
 
   headlineSmall = TextStyle(
     fontFamily = inter,
-    fontWeight = FontWeight.Normal,
+    fontWeight = FontWeight.Bold,
     fontSize = 50.sp,
   ),
 
 
   headlineMedium = TextStyle(
     fontFamily = inter,
-    fontWeight = FontWeight.Normal,
+    fontWeight = FontWeight.Bold,
     fontSize = 60.sp,
   ),
 
   headlineLarge = TextStyle(
     fontFamily = inter,
-    fontWeight = FontWeight.Normal,
+    fontWeight = FontWeight.Bold,
     fontSize = 150.sp,
   )
 )

@@ -39,6 +39,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -87,28 +88,28 @@ fun MainScreen(
       CustomBottomAppBar(
         options = listOf(
           BottomAppBarOption(
-            icon = painterResource(R.drawable.gear),
-            tint = MaterialTheme.colorScheme.onPrimary,
-            contentDescription = "Settings",
-            onClick = onOpenSettings
-          ),
-          BottomAppBarOption(
             icon = painterResource(R.drawable.home),
             tint = MaterialTheme.colorScheme.surface,
             contentDescription = "Home",
             onClick = onOpenHome
           ),
           BottomAppBarOption(
-            icon = painterResource(R.drawable.timer),
-            tint = MaterialTheme.colorScheme.onPrimary,
-            contentDescription = "Pomodoro",
-            onClick = onOpenPomodoro
-          ),
-          BottomAppBarOption(
             icon = painterResource(R.drawable.book),
             tint = MaterialTheme.colorScheme.onPrimary,
             contentDescription = "Bücherregal",
             onClick = onOpenBookshelf
+          ),
+          BottomAppBarOption(
+            icon = painterResource(R.drawable.gear),
+            tint = MaterialTheme.colorScheme.onPrimary,
+            contentDescription = "Settings",
+            onClick = onOpenSettings
+          ),
+          BottomAppBarOption(
+            icon = painterResource(R.drawable.timer),
+            tint = MaterialTheme.colorScheme.onPrimary,
+            contentDescription = "Pomodoro",
+            onClick = onOpenPomodoro
           )
         )
       )

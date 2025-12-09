@@ -1,6 +1,7 @@
 package com.example.gamifiziertertagesplaner.components
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
@@ -25,9 +26,10 @@ import com.example.gamifiziertertagesplaner.ui.theme.shadowElevation
 @Composable
 fun ActionButton(
   onClick: () -> Unit,
-  width: Dp,
+  modifier: Modifier,
   text: String,
-  isPrimary: Boolean = false) {
+  isPrimary: Boolean = false
+) {
   var containerColor: Color
   var contentColor: Color
 
@@ -40,7 +42,7 @@ fun ActionButton(
   }
 
   ElevatedButton(
-    modifier = Modifier.width(width),
+    modifier = modifier,
     onClick = onClick,
     contentPadding = PaddingValues(vertical = 16.dp, horizontal = 24.dp),
     shape = RoundedCornerShape(cornerRadius),

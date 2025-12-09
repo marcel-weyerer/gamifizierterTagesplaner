@@ -1,7 +1,5 @@
-package com.example.gamifiziertertagesplaner.feature.login
+package com.example.gamifiziertertagesplaner.feature.endOfDay
 
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,12 +11,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -26,36 +22,16 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.gamifiziertertagesplaner.components.ActionButton
 import com.example.gamifiziertertagesplaner.components.TextInputField
-import com.example.gamifiziertertagesplaner.firestore.AuthViewModel
 import com.example.gamifiziertertagesplaner.ui.theme.Cream
 import com.example.gamifiziertertagesplaner.ui.theme.DarkBrown
 import com.example.gamifiziertertagesplaner.ui.theme.MediumBrown
-import com.example.gamifiziertertagesplaner.ui.theme.PriorityRed
-import kotlinx.coroutines.delay
 
 @Composable
-fun LoginScreen(
-  authViewModel: AuthViewModel = viewModel(),
-  onLoggedIn: () -> Unit,
-  onSignUp: () -> Unit
+fun EndOfDayScreen(
+  onOpenHome: () -> Unit
 ) {
-  val emailState = remember { TextFieldState() }
-  val passwordState = remember { TextFieldState() }
-
-  val isLoading = authViewModel.isLoading
-  val error = authViewModel.errorMessage
-
-  // Hide error message after give time
-  LaunchedEffect(error) {
-    if (error != null) {
-      delay(2000)
-      authViewModel.clearError()
-    }
-  }
-
   BoxWithConstraints(
     modifier = Modifier
       .fillMaxSize()
@@ -112,7 +88,7 @@ fun LoginScreen(
         contentAlignment = Alignment.Center
       ) {
         Text(
-          text = "Willkommen\nzurück!",
+          text = "Tag erfolgreich\nbeendet!",
           style = MaterialTheme.typography.headlineMedium,
           color = MaterialTheme.colorScheme.onPrimary,
           textAlign = TextAlign.Center,
@@ -122,7 +98,7 @@ fun LoginScreen(
       Spacer(modifier = Modifier.height(100.dp))
 
       TextInputField(
-        state = emailState,
+        state = rememberTextFieldState(""),
         maxHeightLines = 1,
         placeholder = "E-Mail"
       )
@@ -130,40 +106,17 @@ fun LoginScreen(
       Spacer(modifier = Modifier.height(24.dp))
 
       TextInputField(
-        state = passwordState,
+        state = rememberTextFieldState(""),
         maxHeightLines = 1,
         placeholder = "Passwort"
       )
 
-      Box(
-        modifier = Modifier
-          .fillMaxWidth()
-          .height(20.dp),
-        contentAlignment = Alignment.Center
-      ) {
-        androidx.compose.animation.AnimatedVisibility(
-          visible = error != null,
-          enter = fadeIn(),
-          exit = fadeOut()
-        ) {
-          Text(
-            text = "E-Mail oder Passwort falsch",
-            style = MaterialTheme.typography.bodySmall,
-            color = PriorityRed
-          )
-        }
-      }
-
-      Spacer(modifier = Modifier.height(12.dp))
+      Spacer(modifier = Modifier.height(32.dp))
 
       ActionButton(
-        onClick = {
-          val email = emailState.text.toString()
-          val password = passwordState.text.toString()
-          authViewModel.login(email, password, onLoggedIn)
-        },
+        onClick = onOpenHome,
         modifier = Modifier.width(150.dp),
-        text = if (isLoading) "..." else "Login"
+        text = "Login"
       )
 
       Spacer(modifier = Modifier.height(50.dp))
@@ -177,9 +130,9 @@ fun LoginScreen(
       Spacer(modifier = Modifier.height(6.dp))
 
       ActionButton(
-        onClick = onSignUp,
+        onClick = {},
         modifier = Modifier.width(150.dp),
-        text = "Sign up"
+        text = "Tag beenden"
       )
     }
   }

@@ -1,8 +1,12 @@
 package com.example.gamifiziertertagesplaner.feature.bookshelf
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import com.example.gamifiziertertagesplaner.R
 import com.example.gamifiziertertagesplaner.components.BottomAppBarOption
@@ -20,30 +24,39 @@ fun BookshelfScreen(
       CustomBottomAppBar(
         options = listOf(
           BottomAppBarOption(
-            icon = painterResource(R.drawable.trophy),
-            tint = MaterialTheme.colorScheme.onPrimary,
-            contentDescription = "Achievements",
-            onClick = onOpenAchievements
-          ),
-          BottomAppBarOption(
             icon = painterResource(R.drawable.home),
             tint = MaterialTheme.colorScheme.onPrimary,
             contentDescription = "Home",
             onClick = onOpenHome
           ),
           BottomAppBarOption(
+            icon = painterResource(R.drawable.book),
+            tint = MaterialTheme.colorScheme.surface,
+            contentDescription = "Settings",
+            onClick = {}
+          ),
+          BottomAppBarOption(
             icon = painterResource(R.drawable.shopping_cart),
             tint = MaterialTheme.colorScheme.onPrimary,
-            contentDescription = "Shop",
+            contentDescription = "Pomodoro",
             onClick = onOpenShop
           ),
+          BottomAppBarOption(
+            icon = painterResource(R.drawable.trophy),
+            tint = MaterialTheme.colorScheme.onPrimary,
+            contentDescription = "Bücherregal",
+            onClick = onOpenAchievements
+          )
         )
       )
     }
   ) { innerPadding ->
-    TopScreenTitle(
-      innerPadding = innerPadding,
-      title = "Bücherregal"
-    )
+    Column(
+      modifier = Modifier
+        .fillMaxSize()
+        .padding(innerPadding)
+    ) {
+      TopScreenTitle(title = "Bookshelf")
+    }
   }
 }

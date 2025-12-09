@@ -208,7 +208,7 @@ fun CreateTaskScreen(
         // Cancel button
         ActionButton(
           onClick = onCancel,
-          width = 140.dp,
+          modifier = Modifier.width(150.dp),
           text = "Abbrechen"
         )
 
@@ -246,7 +246,7 @@ fun CreateTaskScreen(
 
             onCancel()    // Return to home screen
           },
-          width = 140.dp,
+          modifier = Modifier.width(150.dp),
           text = "Speichern",
           isPrimary = true
         )
