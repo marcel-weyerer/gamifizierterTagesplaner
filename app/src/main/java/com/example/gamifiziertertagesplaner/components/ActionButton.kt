@@ -1,17 +1,21 @@
 package com.example.gamifiziertertagesplaner.components
 
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.dp
 import com.example.gamifiziertertagesplaner.ui.theme.cornerRadius
 import com.example.gamifiziertertagesplaner.ui.theme.shadowElevation
@@ -28,6 +32,7 @@ fun ActionButton(
   onClick: () -> Unit,
   modifier: Modifier,
   text: String,
+  leadingIcon: Painter? = null,
   isPrimary: Boolean = false
 ) {
   var containerColor: Color
@@ -55,9 +60,21 @@ fun ActionButton(
       contentColor = contentColor
     )
   ) {
-    Text(
-      text = text,
-      style = MaterialTheme.typography.bodyMedium,
-    )
+    Row {
+      if (leadingIcon != null) {
+        Icon(
+          modifier = Modifier.size(20.dp),
+          painter = leadingIcon,
+          contentDescription = "subtract"
+        )
+
+        Spacer(modifier = Modifier.width(12.dp))
+      }
+
+      Text(
+        text = text,
+        style = MaterialTheme.typography.bodyMedium,
+      )
+    }
   }
 }
