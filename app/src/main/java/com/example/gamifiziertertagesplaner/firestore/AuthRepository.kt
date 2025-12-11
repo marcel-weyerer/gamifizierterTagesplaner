@@ -183,31 +183,47 @@ class AuthRepository(
     }
   }
 
-  // Spend user points
-  suspend fun spendUserPoints(amount: Int): Result<UserProfile> {
-    val user = auth.currentUser ?: return Result.failure(Exception("No logged-in user"))
+  suspend fun buyShopItems(
+    totalPrice: Int,
+    bookAmount: Int,
+    plantAmount: Int,
+    decorationAmount: Int
+  ): Result<UserProfile> {
 
+    val user = auth.currentUser ?: return Result.failure(Exception("No logged-in user"))
     val uid = user.uid
     val userDocRef = firestore.collection("users").document(uid)
 
     return try {
       firestore.runTransaction { tx ->
         val snapshot = tx.get(userDocRef)
-        val currentPoints = snapshot.getLong("userPoints")?.toInt() ?: 0
 
-        if (currentPoints < amount) {
+        val currentPoints = snapshot.getLong("userPoints")?.toInt() ?: 0
+        val currentBooks = snapshot.getLong("boughtBooks")?.toInt() ?: 0
+        val currentPlants = snapshot.getLong("boughtPlants")?.toInt() ?: 0
+        val currentDecor = snapshot.getLong("boughtDecoration")?.toInt() ?: 0
+
+        // Check points
+        if (currentPoints < totalPrice) {
           throw IllegalStateException("Nicht genug Punkte")
         }
 
-        val newPoints = currentPoints - amount
-        tx.update(userDocRef, "userPoints", newPoints)
+        // Update user data
+        tx.update(userDocRef, mapOf(
+          "userPoints" to (currentPoints - totalPrice),
+          "boughtBooks" to (currentBooks + bookAmount),
+          "boughtPlants" to (currentPlants + plantAmount),
+          "boughtDecoration" to (currentDecor + decorationAmount)
+        ))
       }.await()
 
+      // Afterwards: load new profile
       val updatedSnapshot = userDocRef.get().await()
       val updatedProfile = updatedSnapshot.toObject(UserProfile::class.java)
-        ?: return Result.failure(Exception("User profile not found after spending points"))
+        ?: return Result.failure(Exception("User profile not found after update"))
 
       Result.success(updatedProfile)
+
     } catch (e: Exception) {
       Result.failure(e)
     }

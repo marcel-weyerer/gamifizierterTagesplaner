@@ -170,20 +170,29 @@ class AuthViewModel(
     }
   }
 
-  fun spendPoints(
-    amount: Int,
+  fun buyShopItems(
+    totalPrice: Int,
+    bookAmount: Int,
+    plantAmount: Int,
+    decorationAmount: Int,
     onSuccess: () -> Unit = {}
   ) {
     isLoading = true
     errorMessage = null
 
     viewModelScope.launch {
-      val result = repository.spendUserPoints(amount)
+      val result = repository.buyShopItems(
+        totalPrice = totalPrice,
+        bookAmount = bookAmount,
+        plantAmount = plantAmount,
+        decorationAmount = decorationAmount
+      )
+
       isLoading = false
 
       result
         .onSuccess { updatedProfile ->
-          userProfile = updatedProfile   // UI bekommt die neuen Punkte
+          userProfile = updatedProfile
           onSuccess()
         }
         .onFailure { e ->

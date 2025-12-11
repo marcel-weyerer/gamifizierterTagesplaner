@@ -7,6 +7,9 @@ data class UserProfile(
   val username: String = "",
   val email: String = "",
   val userPoints: Int? = 0,
+  val boughtBooks: Int = 0,
+  val boughtPlants: Int = 0,
+  val boughtDecoration: Int = 0,
   val photoUrl: String? = null,
   val createdAt: Timestamp = Timestamp.now()
 )

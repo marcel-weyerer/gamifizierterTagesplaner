@@ -35,7 +35,7 @@ fun App() {
 
   LaunchedEffect(Unit) {
     if (authViewModel.repositoryCurrentUser() != null) {
-      navController.navigate(Routes.HOME) {
+      navController.navigate(Routes.BOOKSHELF) {
         popUpTo(0) { inclusive = true }
       }
     } else {
@@ -112,6 +112,7 @@ fun App() {
 
     composable(Routes.BOOKSHELF) {    // Bookshelf Screen
       BookshelfScreen(
+        authViewModel = authViewModel,
         onOpenHome = { navController.navigate(Routes.HOME) },
         onOpenAchievements = { navController.navigate(Routes.ACHIEVEMENTS) },
         onOpenShop = { navController.navigate(Routes.SHOP) }

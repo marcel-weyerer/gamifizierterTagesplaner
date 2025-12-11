@@ -145,8 +145,11 @@ fun ShopScreen(
       ActionButton(
         onClick = {
           if (totalPrice > 0 && totalPrice <= profilePoints) {
-            authViewModel.spendPoints(
-              amount = totalPrice,
+            authViewModel.buyShopItems(
+              totalPrice = totalPrice,
+              bookAmount = bookAmount,
+              plantAmount = plantAmount,
+              decorationAmount = decotrationAmount,
               onSuccess = {
                 // Clear amounts
                 bookAmount = 0
