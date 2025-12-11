@@ -21,6 +21,14 @@ class AuthViewModel(
   var errorMessage by mutableStateOf<String?>(null)
     private set
 
+  init {
+    // Load profile on startup if user is already logged in
+    viewModelScope.launch {
+      val profile = repository.loadCurrentUserProfile()
+      userProfile = profile
+    }
+  }
+
   fun repositoryCurrentUser(): FirebaseUser? = repository.currentUser()
 
   fun register(
@@ -78,5 +86,109 @@ class AuthViewModel(
 
   fun clearError() {
     errorMessage = null
+  }
+
+  fun updateUsername(
+    newUsername: String,
+    onSuccess: () -> Unit = {}
+  ) {
+    isLoading = true
+    errorMessage = null
+
+    viewModelScope.launch {
+      val result = repository.updateUsername(newUsername.trim())
+      isLoading = false
+
+      result
+        .onSuccess { updatedProfile ->
+          userProfile = updatedProfile
+          onSuccess()
+        }
+        .onFailure { e ->
+          errorMessage = e.message
+        }
+    }
+  }
+
+  fun updateEmail(newEmail: String, onSuccess: () -> Unit = {}) {
+    isLoading = true
+    errorMessage = null
+
+    viewModelScope.launch {
+      val result = repository.updateEmail(newEmail)
+      isLoading = false
+
+      result
+        .onSuccess {
+          // Only verification mail sent – email will change after user confirms
+          onSuccess()
+        }
+        .onFailure { e ->
+          errorMessage = e.message
+        }
+    }
+  }
+
+
+  fun updatePassword(newPassword: String, onSuccess: () -> Unit = {}) {
+    isLoading = true
+    errorMessage = null
+
+    viewModelScope.launch {
+      val result = repository.updatePassword(newPassword)
+      isLoading = false
+
+      result
+        .onSuccess {
+          onSuccess()
+        }
+        .onFailure { e ->
+          errorMessage = e.message
+        }
+    }
+  }
+
+  fun updateProfilePicture(
+    imageBytes: ByteArray,
+    onSuccess: () -> Unit = {}
+  ) {
+    isLoading = true
+    errorMessage = null
+
+    viewModelScope.launch {
+      val result = repository.updateProfilePicture(imageBytes)
+      isLoading = false
+
+      result
+        .onSuccess { updated ->
+          userProfile = updated
+          onSuccess()
+        }
+        .onFailure { e ->
+          errorMessage = e.message
+        }
+    }
+  }
+
+  fun spendPoints(
+    amount: Int,
+    onSuccess: () -> Unit = {}
+  ) {
+    isLoading = true
+    errorMessage = null
+
+    viewModelScope.launch {
+      val result = repository.spendUserPoints(amount)
+      isLoading = false
+
+      result
+        .onSuccess { updatedProfile ->
+          userProfile = updatedProfile   // UI bekommt die neuen Punkte
+          onSuccess()
+        }
+        .onFailure { e ->
+          errorMessage = e.message
+        }
+    }
   }
 }

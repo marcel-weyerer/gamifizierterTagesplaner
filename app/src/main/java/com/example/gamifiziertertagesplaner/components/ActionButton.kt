@@ -3,7 +3,6 @@ package com.example.gamifiziertertagesplaner.components
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,7 +32,8 @@ fun ActionButton(
   modifier: Modifier,
   text: String,
   leadingIcon: Painter? = null,
-  isPrimary: Boolean = false
+  isPrimary: Boolean = false,
+  enabled: Boolean = true
 ) {
   var containerColor: Color
   var contentColor: Color
@@ -58,7 +58,8 @@ fun ActionButton(
     colors = ButtonDefaults.buttonColors(
       containerColor = containerColor,
       contentColor = contentColor
-    )
+    ),
+    enabled = enabled
   ) {
     Row {
       if (leadingIcon != null) {

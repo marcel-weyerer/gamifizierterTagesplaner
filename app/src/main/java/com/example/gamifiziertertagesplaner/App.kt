@@ -25,11 +25,10 @@ import com.example.gamifiziertertagesplaner.navigation.Routes
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun App(
-  authViewModel: AuthViewModel = viewModel()
-) {
+fun App() {
   // Setup navigation to all composable screens
   val navController = rememberNavController()
+  val authViewModel: AuthViewModel = viewModel()
 
   // Task currently being edited (null = create mode)
   var taskToEdit by remember { mutableStateOf<Task?>(null) }
@@ -52,6 +51,7 @@ fun App(
   ) {
     composable(Routes.LOGIN) {        // Login Screen
       LoginScreen(
+        authViewModel = authViewModel,
         onLoggedIn = {
           navController.navigate(Routes.HOME) {
             popUpTo(Routes.LOGIN) { inclusive = true }
@@ -63,6 +63,7 @@ fun App(
 
     composable("signup") {
       SignUpScreen(
+        authViewModel = authViewModel,
         onSignedUp = {
           navController.navigate(Routes.HOME) {
             popUpTo(Routes.LOGIN) { inclusive = true }
@@ -127,6 +128,7 @@ fun App(
 
     composable(Routes.SHOP) {    // Shop Screen
       ShopScreen(
+        authViewModel = authViewModel,
         onOpenHome = { navController.navigate(Routes.HOME) },
         onOpenBookshelf = { navController.navigate(Routes.BOOKSHELF) },
         onOpenAchievements = { navController.navigate(Routes.ACHIEVEMENTS) }
@@ -135,6 +137,7 @@ fun App(
 
     composable(Routes.SETTINGS) {    // Settings Screen
       SettingsScreen(
+        authViewModel = authViewModel,
         onOpenHome = { navController.navigate(Routes.HOME) },
         onOpenPomodoro = { navController.navigate(Routes.POMODORO) },
         onOpenBookshelf = { navController.navigate(Routes.BOOKSHELF) },

@@ -32,14 +32,17 @@ import com.example.gamifiziertertagesplaner.components.ActionButton
 import com.example.gamifiziertertagesplaner.components.BottomAppBarOption
 import com.example.gamifiziertertagesplaner.components.CustomBottomAppBar
 import com.example.gamifiziertertagesplaner.components.TopScreenTitle
+import com.example.gamifiziertertagesplaner.firestore.AuthViewModel
+import com.example.gamifiziertertagesplaner.ui.theme.PriorityRed
 import com.example.gamifiziertertagesplaner.ui.theme.cornerRadius
 import com.example.gamifiziertertagesplaner.ui.theme.shadowElevation
 
 @Composable
 fun ShopScreen(
+  authViewModel: AuthViewModel,
   onOpenHome: () -> Unit,
   onOpenBookshelf: () -> Unit,
-  onOpenAchievements: () -> Unit
+  onOpenAchievements: () -> Unit,
 ) {
   Scaffold(
     bottomBar = {
@@ -87,8 +90,11 @@ fun ShopScreen(
       val plantPrice = 500
       val decorationPrice = 750
 
+      val profilePoints = authViewModel.userProfile?.userPoints ?: 0
+
       TopScreenTitle(title = "Buchladen")
 
+      // Punktestand
       Text(
         text = "Punktestand",
         style = MaterialTheme.typography.headlineSmall,
@@ -96,7 +102,7 @@ fun ShopScreen(
       )
 
       Text(
-        text = "1148",
+        text = profilePoints.toString(),
         style = MaterialTheme.typography.headlineMedium,
         color = MaterialTheme.colorScheme.onBackground,
       )
@@ -128,19 +134,35 @@ fun ShopScreen(
       Spacer(modifier = Modifier.height(12.dp))
 
       val totalPrice = (bookPrice * bookAmount) + (plantPrice * plantAmount) + (decorationPrice * decotrationAmount)
+      val color = if (totalPrice > profilePoints) PriorityRed else MaterialTheme.colorScheme.surfaceVariant
 
       Text(
         text = "Gesamt - $totalPrice Punkte",
         style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.surfaceVariant,
+        color = color,
       )
 
       ActionButton(
-        onClick = onOpenBookshelf,
+        onClick = {
+          if (totalPrice > 0 && totalPrice <= profilePoints) {
+            authViewModel.spendPoints(
+              amount = totalPrice,
+              onSuccess = {
+                // Clear amounts
+                bookAmount = 0
+                plantAmount = 0
+                decotrationAmount = 0
+
+                onOpenBookshelf()
+              }
+            )
+          }
+        },
         modifier = Modifier.width(170.dp),
         leadingIcon = painterResource(R.drawable.shopping_cart),
         text = "Kaufen",
-        isPrimary = true
+        isPrimary = true,
+        enabled = totalPrice <= profilePoints
       )
     }
   }

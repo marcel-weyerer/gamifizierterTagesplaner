@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
@@ -24,48 +23,18 @@ data class SettingsContent(
 )
 
 @Composable
-fun rememberSettingsContentMap(): Map<SettingsType, SettingsContent> {
-  return remember {
-    mapOf(
-      SettingsType.USERNAME to SettingsContent(
-        title = "Nutzername ändern",
-        description = "Gib einen neuen Benutzernamen ein",
-        content = { UsernameContent() }
-      ),
-      SettingsType.PROFILE_PICTURE to SettingsContent(
-        title = "Profilbild ändern",
-        description = "Möchtest du dein Profilbild ändern?",
-        content = { ProfilePictureContent() }
-      ),
-      SettingsType.PASSWORD to SettingsContent(
-        title = "Passwort ändern",
-        description = "Gib dein neues Passwort ein",
-        content = { PasswordContent() }
-      ),
-      SettingsType.EMAIL to SettingsContent(
-        title = "E-Mail ändern",
-        description = "Gib deine neue E-Mail-Adresse ein",
-        content = { EmailContent() }
-      ),
-      SettingsType.NOTIFICATION to SettingsContent(
-        title = "Benachrichtigungen anpassen",
-        description = "Passe deine Benachrichtigungen an",
-        content = { NotificationContent() }
-      )
-    )
-  }
-}
-
-@Composable
-fun UsernameContent() {
+fun UsernameContent(
+  state: TextFieldState
+) {
   TextInputField(
     modifier = Modifier
       .fillMaxWidth()
       .padding(top = 24.dp),
-    state = TextFieldState(),
+    state = state,
     placeholder = "Neuer Name"
   )
 }
+
 
 @Composable
 fun ProfilePictureContent() {
@@ -78,37 +47,40 @@ fun ProfilePictureContent() {
   )
 }
 
+
 @Composable
-fun PasswordContent() {
+fun PasswordContent(
+  newPasswordState: TextFieldState,
+  newPasswordConfirmState: TextFieldState
+) {
   Column(
     modifier = Modifier
       .fillMaxWidth()
       .padding(top = 24.dp)
   ) {
-    TextInputField(
-      modifier = Modifier.fillMaxWidth(),
-      state = TextFieldState(),
-      placeholder = "Aktuelles Passwort"
-    )
     TextInputField(
       modifier = Modifier
         .fillMaxWidth()
         .padding(top = 24.dp),
-      state = TextFieldState(),
+      state = newPasswordState,
       placeholder = "Neues Passwort"
     )
     TextInputField(
       modifier = Modifier
         .fillMaxWidth()
         .padding(top = 12.dp),
-      state = TextFieldState(),
-      placeholder = "Neues Passwort"
+      state = newPasswordConfirmState,
+      placeholder = "Neues Passwort bestätigen"
     )
   }
 }
 
+
 @Composable
-fun EmailContent() {
+fun EmailContent(
+  newEmailState: TextFieldState,
+  newEmailConfirmState: TextFieldState
+) {
   Column(
     modifier = Modifier
       .fillMaxWidth()
@@ -116,15 +88,15 @@ fun EmailContent() {
   ) {
     TextInputField(
       modifier = Modifier.fillMaxWidth(),
-      state = TextFieldState(),
+      state = newEmailState,
       placeholder = "Neue E-Mail"
     )
     TextInputField(
       modifier = Modifier
         .fillMaxWidth()
         .padding(top = 12.dp),
-      state = TextFieldState(),
-      placeholder = "Neue E-Mail"
+      state = newEmailConfirmState,
+      placeholder = "Neue E-Mail bestätigen"
     )
   }
 }

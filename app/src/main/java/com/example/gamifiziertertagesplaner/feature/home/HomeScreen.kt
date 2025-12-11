@@ -398,6 +398,7 @@ private fun TaskList(
             LazyColumn(
               modifier = Modifier
                 .fillMaxSize()
+                .padding(horizontal = 24.dp)
                 .align(Alignment.TopCenter),
             ) {
               // Sections for active tasks depending on priority
@@ -501,9 +502,7 @@ private fun TaskView(
   var showDeleteDialog by remember { mutableStateOf(false) }
 
   Surface(
-    modifier = Modifier
-      .fillMaxWidth()
-      .padding(horizontal = 24.dp),
+    modifier = Modifier.fillMaxWidth(),
     color = MaterialTheme.colorScheme.secondary,
     shape = RoundedCornerShape(cornerRadius),
     shadowElevation = shadowElevation,

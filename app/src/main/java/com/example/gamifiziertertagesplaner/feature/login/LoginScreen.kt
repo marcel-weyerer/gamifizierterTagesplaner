@@ -26,7 +26,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.gamifiziertertagesplaner.components.ActionButton
 import com.example.gamifiziertertagesplaner.components.TextInputField
 import com.example.gamifiziertertagesplaner.firestore.AuthViewModel
@@ -38,7 +37,7 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun LoginScreen(
-  authViewModel: AuthViewModel = viewModel(),
+  authViewModel: AuthViewModel,
   onLoggedIn: () -> Unit,
   onSignUp: () -> Unit
 ) {

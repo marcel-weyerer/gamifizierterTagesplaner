@@ -1,5 +1,8 @@
 package com.example.gamifiziertertagesplaner.feature.login
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -14,12 +17,15 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.gamifiziertertagesplaner.components.ActionButton
 import com.example.gamifiziertertagesplaner.components.TextInputField
 import com.example.gamifiziertertagesplaner.firestore.AuthViewModel
@@ -27,16 +33,37 @@ import com.example.gamifiziertertagesplaner.ui.theme.PriorityRed
 
 @Composable
 fun SignUpScreen(
-  authViewModel: AuthViewModel = viewModel(),
+  authViewModel: AuthViewModel,
   onSignedUp: () -> Unit,
   onBackToLogin: () -> Unit
 ) {
+  val context = LocalContext.current
+
   val usernameState = remember { TextFieldState() }
   val emailState = remember { TextFieldState() }
   val passwordState = remember { TextFieldState() }
 
+  var profileImageBytes by remember { mutableStateOf<ByteArray?>(null) }
+  var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+
   val isLoading = authViewModel.isLoading
   val error = authViewModel.errorMessage
+
+  val imagePickerLauncher = rememberLauncherForActivityResult(
+    contract = ActivityResultContracts.GetContent()
+  ) { uri: Uri? ->
+    selectedImageUri = uri
+    profileImageBytes = uri?.let {
+      try {
+        context.contentResolver.openInputStream(it)?.use { stream ->
+          stream.readBytes()
+        }
+      } catch (e: Exception) {
+        e.printStackTrace()
+        null
+      }
+    }
+  }
 
   Surface(    // background
     modifier = Modifier.fillMaxSize(),
@@ -65,7 +92,7 @@ fun SignUpScreen(
         placeholder = "Nutzername"
       )
 
-      Spacer(Modifier.height(16.dp))
+      Spacer(Modifier.height(12.dp))
 
       TextInputField(
         state = emailState,
@@ -73,7 +100,7 @@ fun SignUpScreen(
         placeholder = "E-Mail"
       )
 
-      Spacer(Modifier.height(16.dp))
+      Spacer(Modifier.height(12.dp))
 
       TextInputField(
         state = passwordState,
@@ -81,10 +108,18 @@ fun SignUpScreen(
         placeholder = "Passwort"
       )
 
+      Spacer(Modifier.height(12.dp))
+
+      ActionButton(
+        onClick = { imagePickerLauncher.launch("image/*") },
+        modifier = Modifier.fillMaxWidth(),
+        text = if (selectedImageUri != null) "Profilbild gewählt" else "Profilbild wählen"
+      )
+
       if (error != null) {
         Spacer(Modifier.height(12.dp))
         Text(
-          text = "Angaben falsch",
+          text = error,
           style = MaterialTheme.typography.bodySmall,
           color = PriorityRed)
       }
@@ -101,7 +136,7 @@ fun SignUpScreen(
             email = email,
             password = password,
             username = username,
-            profileImageBytes = null,
+            profileImageBytes = profileImageBytes,
             onSuccess = onSignedUp
           )
         },

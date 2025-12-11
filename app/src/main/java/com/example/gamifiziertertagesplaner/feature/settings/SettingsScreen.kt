@@ -1,11 +1,14 @@
 package com.example.gamifiziertertagesplaner.feature.settings
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Circle
@@ -25,18 +28,26 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.gamifiziertertagesplaner.R
 import com.example.gamifiziertertagesplaner.components.ActionButton
 import com.example.gamifiziertertagesplaner.components.BottomAppBarOption
 import com.example.gamifiziertertagesplaner.components.BottomSheet
 import com.example.gamifiziertertagesplaner.components.CustomBottomAppBar
+import com.example.gamifiziertertagesplaner.components.EmailContent
+import com.example.gamifiziertertagesplaner.components.NotificationContent
+import com.example.gamifiziertertagesplaner.components.PasswordContent
+import com.example.gamifiziertertagesplaner.components.ProfilePictureContent
 import com.example.gamifiziertertagesplaner.components.SectionHeader
+import com.example.gamifiziertertagesplaner.components.SettingsContent
 import com.example.gamifiziertertagesplaner.components.SettingsType
 import com.example.gamifiziertertagesplaner.components.TopScreenTitle
-import com.example.gamifiziertertagesplaner.components.rememberSettingsContentMap
+import com.example.gamifiziertertagesplaner.components.UsernameContent
 import com.example.gamifiziertertagesplaner.firestore.AuthViewModel
 import com.example.gamifiziertertagesplaner.ui.theme.PriorityRed
 import kotlinx.coroutines.launch
@@ -44,7 +55,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-  authViewModel: AuthViewModel = viewModel(),
+  authViewModel: AuthViewModel,
   onOpenHome: () -> Unit,
   onOpenPomodoro: () -> Unit,
   onOpenBookshelf: () -> Unit,
@@ -52,12 +63,50 @@ fun SettingsScreen(
 ) {
   val sheetState = rememberModalBottomSheetState()
   val scope = rememberCoroutineScope()
-  val settingsContentMap = rememberSettingsContentMap()
+  val context = LocalContext.current
 
   var currentType by remember { mutableStateOf<SettingsType?>(null) }
 
+  // Input states for all profile properties
+  val usernameState = remember { TextFieldState() }
+
+  val newEmailState = remember { TextFieldState() }
+  val newEmailConfirmState = remember { TextFieldState() }
+
+  val newPasswordState = remember { TextFieldState() }
+  val newPasswordConfirmState = remember { TextFieldState() }
+
   fun openSheet(type: SettingsType) {
     currentType = type
+
+    // Prefill fields when opening
+    when (type) {
+      SettingsType.USERNAME -> {
+        val currentName = authViewModel.userProfile?.username.orEmpty()
+        usernameState.edit {
+          replace(0, length, currentName)
+        }
+      }
+
+      SettingsType.EMAIL -> {
+        val currentEmail = authViewModel.userProfile?.email.orEmpty()
+        newEmailState.edit {
+          replace(0, length, currentEmail)
+        }
+        newEmailConfirmState.edit {
+          replace(0, length, currentEmail)
+        }
+      }
+
+      SettingsType.PASSWORD -> {
+        // Don't show password
+        newPasswordState.edit { replace(0, length, "") }
+        newPasswordConfirmState.edit { replace(0, length, "") }
+      }
+
+      else -> Unit
+    }
+
     scope.launch { sheetState.show() }
   }
 
@@ -67,6 +116,50 @@ fun SettingsScreen(
     }.invokeOnCompletion {
       currentType = null
     }
+  }
+
+  val settingsContentMap: Map<SettingsType, SettingsContent> = remember {
+    mapOf(
+      SettingsType.USERNAME to SettingsContent(
+        title = "Nutzername ändern",
+        description = "Gib einen neuen Benutzernamen ein",
+        content = {
+          UsernameContent(state = usernameState)
+        }
+      ),
+      SettingsType.PROFILE_PICTURE to SettingsContent(
+        title = "Profilbild ändern",
+        description = "Möchtest du dein Profilbild ändern?",
+        content = {
+          ProfilePictureContent()
+        }
+      ),
+      SettingsType.PASSWORD to SettingsContent(
+        title = "Passwort ändern",
+        description = "Gib dein neues Passwort ein",
+        content = {
+          PasswordContent(
+            newPasswordState = newPasswordState,
+            newPasswordConfirmState = newPasswordConfirmState
+          )
+        }
+      ),
+      SettingsType.EMAIL to SettingsContent(
+        title = "E-Mail ändern",
+        description = "Gib deine neue E-Mail-Adresse ein",
+        content = {
+          EmailContent(
+            newEmailState = newEmailState,
+            newEmailConfirmState = newEmailConfirmState
+          )
+        }
+      ),
+      SettingsType.NOTIFICATION to SettingsContent(
+        title = "Benachrichtigungen anpassen",
+        description = "Passe deine Benachrichtigungen an",
+        content = { NotificationContent() }
+      )
+    )
   }
 
   Scaffold(
@@ -117,24 +210,40 @@ fun SettingsScreen(
           .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally
       ) {
+        val profileImageUrl = authViewModel.userProfile?.photoUrl
+        val username = authViewModel.userProfile?.username ?: "User"
+
         IconButton(
           onClick = { openSheet(SettingsType.PROFILE_PICTURE) },
-          modifier = Modifier.size(150.dp),
+          modifier = Modifier.size(150.dp)
         ) {
-          Icon(
-            modifier = Modifier.fillMaxSize(),
-            imageVector = Icons.Default.Circle,
-            tint = MaterialTheme.colorScheme.onBackground,
-            contentDescription = "Profile Picture"
-          )
+
+          if (profileImageUrl != null) {
+            AsyncImage(
+              model = profileImageUrl,
+              contentDescription = "Profile Picture",
+              modifier = Modifier
+                .fillMaxSize()
+                .clip(CircleShape),
+              contentScale = ContentScale.Crop
+            )
+          } else {
+            Icon(
+              imageVector = Icons.Default.Circle,
+              contentDescription = "Default Profile Icon",
+              modifier = Modifier.fillMaxSize(),
+              tint = MaterialTheme.colorScheme.onBackground
+            )
+          }
         }
 
         Text(
           modifier = Modifier.padding(vertical = 12.dp),
-          text = "Username",
+          text = username,
           style = MaterialTheme.typography.headlineSmall,
           color = MaterialTheme.colorScheme.onBackground
         )
+
         SectionHeader("Nutzer Profil")
 
         ActionButton(
@@ -179,13 +288,69 @@ fun SettingsScreen(
           )
         }
 
+        // Bottom sheet
         currentType?.let { settingsType ->
           val type = settingsContentMap.getValue(settingsType)
 
           BottomSheet(
             sheetState = sheetState,
             onSave = {
-              closeSheet()
+              when (settingsType) {
+                SettingsType.USERNAME -> {
+                  val newName = usernameState.text.toString().trim()
+                  if (newName.isNotEmpty()) {
+                    authViewModel.updateUsername(newName) {
+                      Toast.makeText(context, "Nutzername aktualisiert", Toast.LENGTH_SHORT).show()
+                      closeSheet()
+                    }
+                  } else {
+                    Toast.makeText(context, "Nutzername ungültig", Toast.LENGTH_SHORT).show()
+                  }
+                }
+
+                SettingsType.EMAIL -> {
+                  val newEmail = newEmailState.text.toString().trim()
+                  val confirmEmail = newEmailConfirmState.text.toString().trim()
+
+                  if (newEmail.isEmpty() || confirmEmail.isEmpty()) {
+                    Toast.makeText(context, "Bitte E-Mail zweimal eingeben", Toast.LENGTH_SHORT).show()
+                  } else if (newEmail != confirmEmail) {
+                    Toast.makeText(context, "Die E-Mails stimmen nicht überein", Toast.LENGTH_SHORT).show()
+                  } else {
+                    authViewModel.updateEmail(newEmail) {
+                      Toast.makeText(
+                        context,
+                        "Bestätigungs-E-Mail wurde gesendet",
+                        Toast.LENGTH_LONG
+                      ).show()
+                      closeSheet()
+                    }
+                  }
+                }
+
+                SettingsType.PASSWORD -> {
+                  val newPassword = newPasswordState.text.toString()
+                  val confirmPassword = newPasswordConfirmState.text.toString()
+
+                  if (newPassword.isEmpty() || confirmPassword.isEmpty()) {
+                    Toast.makeText(context, "Bitte Passwort zweimal eingeben", Toast.LENGTH_SHORT).show()
+                  } else if (newPassword != confirmPassword) {
+                    Toast.makeText(context, "Die Passwörter stimmen nicht überein", Toast.LENGTH_SHORT).show()
+                  } else {
+                    authViewModel.updatePassword(newPassword) {
+                      Toast.makeText(context, "Passwort aktualisiert", Toast.LENGTH_SHORT).show()
+                      closeSheet()
+                    }
+                  }
+                }
+
+                SettingsType.PROFILE_PICTURE -> {}
+
+                SettingsType.NOTIFICATION -> {
+                  Toast.makeText(context, "Benachrichtigung aktualisiert", Toast.LENGTH_SHORT).show()
+                  closeSheet()
+                }
+              }
             },
             onCancel = { closeSheet() },
             title = type.title,

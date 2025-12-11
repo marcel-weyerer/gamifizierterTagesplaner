@@ -62,6 +62,7 @@ dependencies {
     implementation("com.google.firebase:firebase-storage-ktx:21.0.2")
     implementation("com.google.firebase:firebase-firestore-ktx:25.1.4")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
+    implementation("io.coil-kt:coil-compose:2.5.0")
     implementation(libs.androidx.compose.runtime)
     implementation(libs.androidx.material3)
   implementation(libs.androidx.compose.foundation)
