@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
  * @param text  The text to display in the header
  */
 @Composable
-public fun SectionHeader(text: String) {
+fun SectionHeader(text: String) {
   Row(
     modifier = Modifier
       .fillMaxWidth()

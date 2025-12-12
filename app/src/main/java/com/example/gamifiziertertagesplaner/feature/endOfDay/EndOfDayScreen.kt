@@ -1,5 +1,7 @@
 package com.example.gamifiziertertagesplaner.feature.endOfDay
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,10 +13,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -23,15 +26,35 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.gamifiziertertagesplaner.components.ActionButton
-import com.example.gamifiziertertagesplaner.components.TextInputField
+import com.example.gamifiziertertagesplaner.components.TaskProgressBar
+import com.example.gamifiziertertagesplaner.feature.home.HomeViewModel
+import com.example.gamifiziertertagesplaner.firestore.AuthViewModel
 import com.example.gamifiziertertagesplaner.ui.theme.Cream
 import com.example.gamifiziertertagesplaner.ui.theme.DarkBrown
 import com.example.gamifiziertertagesplaner.ui.theme.MediumBrown
+import com.google.firebase.Timestamp
+import java.time.ZoneId
+import java.util.Date
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun EndOfDayScreen(
+  homeViewModel: HomeViewModel,
+  authViewModel: AuthViewModel,
   onOpenHome: () -> Unit
 ) {
+  val totalPoints by homeViewModel.totalPoints.collectAsState()
+  val receivedPoints by homeViewModel.receivedPoints.collectAsState()
+
+  val totalPointsText = "$receivedPoints Punkte verdient"
+
+  val allTasks = homeViewModel.getTaskCount()
+  val doneTasks = homeViewModel.getDoneTasks()
+
+  val tasksText = "$doneTasks von $allTasks Tasks erledigt"
+
+  val userPoints = (authViewModel.userProfile?.userPoints ?: 0) + receivedPoints
+
   BoxWithConstraints(
     modifier = Modifier
       .fillMaxSize()
@@ -88,7 +111,7 @@ fun EndOfDayScreen(
         contentAlignment = Alignment.Center
       ) {
         Text(
-          text = "Tag erfolgreich\nbeendet!",
+          text = "Tag\nbeendet!",
           style = MaterialTheme.typography.headlineMedium,
           color = MaterialTheme.colorScheme.onPrimary,
           textAlign = TextAlign.Center,
@@ -97,41 +120,73 @@ fun EndOfDayScreen(
 
       Spacer(modifier = Modifier.height(100.dp))
 
-      TextInputField(
-        state = rememberTextFieldState(""),
-        maxHeightLines = 1,
-        placeholder = "E-Mail"
+      Text(
+        text = tasksText,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onPrimary,
       )
 
       Spacer(modifier = Modifier.height(24.dp))
 
-      TextInputField(
-        state = rememberTextFieldState(""),
-        maxHeightLines = 1,
-        placeholder = "Passwort"
+      TaskProgressBar(
+        receivedPoints = receivedPoints,
+        totalPoints = totalPoints
       )
 
-      Spacer(modifier = Modifier.height(32.dp))
-
-      ActionButton(
-        onClick = onOpenHome,
-        modifier = Modifier.width(150.dp),
-        text = "Login"
-      )
-
-      Spacer(modifier = Modifier.height(50.dp))
+      Spacer(modifier = Modifier.height(24.dp))
 
       Text(
-        text = "Noch kein Account?",
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.surfaceVariant
+        text = totalPointsText,
+        style = MaterialTheme.typography.bodyLarge,
+        color = MaterialTheme.colorScheme.onPrimary,
       )
 
-      Spacer(modifier = Modifier.height(6.dp))
+      Spacer(modifier = Modifier.height(48.dp))
+
+      Text(
+        text = "Neuer Punktestand",
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onPrimary,
+      )
+
+      Text(
+        text = userPoints.toString(),
+        style = MaterialTheme.typography.headlineMedium,
+        color = MaterialTheme.colorScheme.onPrimary,
+      )
+
+      Spacer(modifier = Modifier.height(48.dp))
 
       ActionButton(
-        onClick = {},
-        modifier = Modifier.width(150.dp),
+        onClick = {
+          val endOfDayTime = authViewModel.userProfile?.endOfDayTime
+
+          val newEndOfDayTime = endOfDayTime?.let { ts ->
+            // Convert Timestamp -> LocalDateTime
+            val currentLdt = ts.toDate()
+              .toInstant()
+              .atZone(ZoneId.systemDefault())
+              .toLocalDateTime()
+
+            // Same clock time, next day
+            val nextDayLdt = currentLdt.plusDays(1)
+
+            // LocalDateTime -> Timestamp
+            val nextInstant = nextDayLdt
+              .atZone(ZoneId.systemDefault())
+              .toInstant()
+
+            Timestamp(Date.from(nextInstant))
+          }
+
+          if (newEndOfDayTime != null)
+            authViewModel.updateEndOfDay(newEndOfDayTime)
+
+          authViewModel.updateUserPoints(userPoints)
+          homeViewModel.deleteDoneTasks()
+          onOpenHome()
+        },
+        modifier = Modifier.width(200.dp),
         text = "Tag beenden"
       )
     }

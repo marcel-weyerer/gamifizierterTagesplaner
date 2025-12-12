@@ -11,5 +11,7 @@ data class UserProfile(
   val boughtPlants: Int = 0,
   val boughtDecoration: Int = 0,
   val photoUrl: String? = null,
+  val createListReminderMinutes: Int? = 1080,   // Default 18:00
+  val endOfDayTime: Timestamp = Timestamp.now(),
   val createdAt: Timestamp = Timestamp.now()
 )

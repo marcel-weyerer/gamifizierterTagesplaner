@@ -13,7 +13,8 @@ enum class SettingsType {
   PROFILE_PICTURE,
   PASSWORD,
   EMAIL,
-  NOTIFICATION
+  NOTIFICATION,
+  ENDOFDAY
 }
 
 data class SettingsContent(
@@ -102,14 +103,29 @@ fun EmailContent(
 }
 
 @Composable
-fun NotificationContent() {
+fun EndOfDayContent(
+  onOpenEndOfDay: () -> Unit
+) {
+  ActionButton(
+    onClick = onOpenEndOfDay,
+    modifier = Modifier
+      .padding(top = 24.dp)
+      .fillMaxWidth(),
+    text = "Tagesabschluss anpassen"
+  )
+}
+
+@Composable
+fun NotificationContent(
+  onOpenDailyReminder: () -> Unit
+) {
   Column(
     modifier = Modifier
       .fillMaxWidth()
       .padding(top = 24.dp)
   ) {
     ActionButton(
-      onClick = {},
+      onClick = onOpenDailyReminder,
       modifier = Modifier
         .fillMaxWidth(),
       text = "Tagesplan Benachrichtigung"

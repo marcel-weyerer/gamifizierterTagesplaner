@@ -1,5 +1,6 @@
 package com.example.gamifiziertertagesplaner.feature.shop
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,8 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -25,6 +24,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.gamifiziertertagesplaner.R
@@ -32,6 +34,9 @@ import com.example.gamifiziertertagesplaner.components.ActionButton
 import com.example.gamifiziertertagesplaner.components.BottomAppBarOption
 import com.example.gamifiziertertagesplaner.components.CustomBottomAppBar
 import com.example.gamifiziertertagesplaner.components.TopScreenTitle
+import com.example.gamifiziertertagesplaner.feature.bookshelf.bookSlots
+import com.example.gamifiziertertagesplaner.feature.bookshelf.decorationSlots
+import com.example.gamifiziertertagesplaner.feature.bookshelf.plantSlots
 import com.example.gamifiziertertagesplaner.firestore.AuthViewModel
 import com.example.gamifiziertertagesplaner.ui.theme.PriorityRed
 import com.example.gamifiziertertagesplaner.ui.theme.cornerRadius
@@ -44,6 +49,8 @@ fun ShopScreen(
   onOpenBookshelf: () -> Unit,
   onOpenAchievements: () -> Unit,
 ) {
+  val context = LocalContext.current
+
   Scaffold(
     bottomBar = {
       CustomBottomAppBar(
@@ -86,6 +93,10 @@ fun ShopScreen(
       var plantAmount by remember { mutableIntStateOf(0) }
       var decotrationAmount by remember { mutableIntStateOf(0) }
 
+      val maxAvailableBooks = bookSlots.size - (authViewModel.userProfile?.boughtBooks ?: 0)
+      val maxAvailablePlants = plantSlots.size - (authViewModel.userProfile?.boughtPlants ?: 0)
+      val maxAvailableDecorations = decorationSlots.size - (authViewModel.userProfile?.boughtDecoration ?: 0)
+
       val bookPrice = 200
       val plantPrice = 500
       val decorationPrice = 750
@@ -111,24 +122,45 @@ fun ShopScreen(
 
       ItemShopSection(
         item = "Buch",
+        painterResource = painterResource(R.drawable.book_shop_icon),
         price = bookPrice,
         itemAmount = bookAmount,
-        onIncreaseAmount = { bookAmount += 1 },
-        onReduceAmount = { bookAmount -= 1 }
+        onIncreaseAmount = {
+          if (bookAmount < maxAvailableBooks) {
+            bookAmount++
+          } else {
+            Toast.makeText(context, "Alle Bücher gekauft!", Toast.LENGTH_SHORT).show()
+          }
+        },
+        onReduceAmount = { bookAmount = (bookAmount - 1).coerceIn(0, maxAvailableBooks) }
       )
       ItemShopSection(
         item = "Pflanze",
+        painterResource = painterResource(R.drawable.plant_shop_icon),
         price = plantPrice,
         itemAmount = plantAmount,
-        onIncreaseAmount = { plantAmount += 1 },
-        onReduceAmount = { plantAmount -= 1 }
+        onIncreaseAmount = {
+          if (plantAmount < maxAvailablePlants) {
+            plantAmount++
+          } else {
+            Toast.makeText(context, "Alle Pflanzen gekauft!", Toast.LENGTH_SHORT).show()
+          }
+        },
+        onReduceAmount = { plantAmount = (plantAmount - 1).coerceIn(0, maxAvailablePlants) }
       )
       ItemShopSection(
         item = "Dekoration",
+        painterResource = painterResource(R.drawable.decoration_shop_icon),
         price = decorationPrice,
         itemAmount = decotrationAmount,
-        onIncreaseAmount = { decotrationAmount += 1 },
-        onReduceAmount = { decotrationAmount -= 1 }
+        onIncreaseAmount = {
+          if (decotrationAmount < maxAvailableDecorations) {
+            decotrationAmount++
+          } else {
+            Toast.makeText(context, "Alle Dekorationen gekauft!", Toast.LENGTH_SHORT).show()
+          }
+        },
+        onReduceAmount = { decotrationAmount = (decotrationAmount - 1).coerceIn(0, maxAvailableDecorations) }
       )
 
       Spacer(modifier = Modifier.height(12.dp))
@@ -174,6 +206,7 @@ fun ShopScreen(
 @Composable
 private fun ItemShopSection(
   item: String,
+  painterResource: Painter,
   price: Int,
   itemAmount: Int,
   onIncreaseAmount: () -> Unit,
@@ -187,6 +220,7 @@ private fun ItemShopSection(
   ) {
     ItemShopButton(
       modifier = Modifier.weight(1f),
+      painterResource = painterResource,
       item = item,
       price = price,
       onClick = onIncreaseAmount
@@ -205,6 +239,7 @@ private fun ItemShopSection(
 @Composable
 private fun ItemShopButton(
   modifier: Modifier,
+  painterResource: Painter,
   item: String,
   price: Int,
   onClick: () -> Unit
@@ -224,9 +259,9 @@ private fun ItemShopButton(
       // Item icon
       Icon(
         modifier = Modifier.size(60.dp),
-        imageVector = Icons.Default.Circle,
+        painter = painterResource,
         contentDescription = null,
-        tint = MaterialTheme.colorScheme.onSecondary
+        tint = Color.Unspecified
       )
 
       // Title and time information

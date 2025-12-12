@@ -11,4 +11,5 @@ object Routes {
   const val SHOP = "shop"
   const val SETTINGS = "settings"
   const val POMODORO = "pomodoro"
+  const val ENDOFDAY = "endOfDay"
 }

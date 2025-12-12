@@ -1,5 +1,6 @@
 package com.example.gamifiziertertagesplaner.feature.bookshelf
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,16 +12,20 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -30,6 +35,7 @@ import com.example.gamifiziertertagesplaner.components.BottomAppBarOption
 import com.example.gamifiziertertagesplaner.components.CustomBottomAppBar
 import com.example.gamifiziertertagesplaner.components.TopScreenTitle
 import com.example.gamifiziertertagesplaner.firestore.AuthViewModel
+import kotlinx.coroutines.delay
 
 @Composable
 fun BookshelfScreen(
@@ -72,6 +78,8 @@ fun BookshelfScreen(
   ) { innerPadding ->
     val profilePoints = authViewModel.userProfile?.userPoints ?: 0
     val boughtBooks = authViewModel.userProfile?.boughtBooks ?: 0
+    val boughtDecoration = authViewModel.userProfile?.boughtDecoration ?: 0
+    val boughtPlants = authViewModel.userProfile?.boughtPlants ?: 0
 
     Surface(
       modifier = Modifier.fillMaxSize(),
@@ -88,7 +96,9 @@ fun BookshelfScreen(
           modifier = Modifier
             .fillMaxWidth()
             .weight(1f),
-          boughtBooks = boughtBooks
+          boughtBooks = boughtBooks,
+          boughtDecoration = boughtDecoration,
+          boughtPlants = boughtPlants
         )
 
         Column(
@@ -119,13 +129,48 @@ fun BookshelfScreen(
 @Composable
 fun Bookshelf(
   modifier: Modifier,
-  boughtBooks: Int
+  boughtBooks: Int,
+  boughtDecoration: Int,
+  boughtPlants: Int
 ) {
-  val clampedCount = boughtBooks.coerceIn(0, bookSlots.size)
+  val clampedBookCount = boughtBooks.coerceIn(0, bookSlots.size)
+  val clampedDecorationCount = boughtDecoration.coerceIn(0, decorationSlots.size)
+  val clampedPlantCount = boughtPlants.coerceIn(0, plantSlots.size)
   val shelfGap = 100.dp
   val shelfThickness = 24.dp
   val shelfColor = MaterialTheme.colorScheme.primary
   val totalBookshelfHeight = shelfGap * 3 + shelfThickness * 3
+
+  var visibleBookCount by remember { mutableIntStateOf(0) }
+  var visibleDecorationCount by remember { mutableIntStateOf(0) }
+  var visiblePlantCount by remember { mutableIntStateOf(0) }
+
+  // Reveal items one-by-one
+  LaunchedEffect(clampedBookCount) {
+    visibleBookCount = 0
+    repeat(clampedBookCount) {
+      delay(100)
+      visibleBookCount++
+    }
+  }
+
+  // Reveal items one-by-one
+  LaunchedEffect(clampedDecorationCount) {
+    visibleDecorationCount = 0
+    repeat(clampedDecorationCount) {
+      delay(100)
+      visibleDecorationCount++
+    }
+  }
+
+  // Reveal items one-by-one
+  LaunchedEffect(clampedPlantCount) {
+    visiblePlantCount = 0
+    repeat(clampedPlantCount) {
+      delay(100)
+      visiblePlantCount++
+    }
+  }
 
   Column(
     modifier = modifier
@@ -166,9 +211,19 @@ fun Bookshelf(
         Box(
           modifier = Modifier.matchParentSize()
         ) {
-          for (index in 0 until clampedCount) {
-            val slot = bookSlots[index]
-            BookAtSlot(slot = slot)
+          for (index in 0 until visibleBookCount) {
+            val item = bookSlots[index]
+            ItemAtSlot(item = item)
+          }
+
+          for (index in 0 until visibleDecorationCount) {
+            val item = decorationSlots[index]
+            ItemAtSlot(item = item)
+          }
+
+          for (index in 0 until visiblePlantCount) {
+            val item = plantSlots[index]
+            ItemAtSlot(item = item)
           }
         }
       }
@@ -177,25 +232,25 @@ fun Bookshelf(
 }
 
 @Composable
-private fun BookAtSlot(slot: BookSlot) {
+private fun ItemAtSlot(item: ItemSlot) {
   val shelfGap = 100.dp
   val shelfThickness = 24.dp
-  val yOffset = slot.row * (shelfGap + shelfThickness) + slot.offsetY
+  val yOffset = item.row * (shelfGap + shelfThickness) + item.offsetY
 
   Box(
     modifier = Modifier
-      .offset(x = slot.offsetX, y = yOffset)
-      .size(slot.width, slot.height)
+      .offset(x = item.offsetX, y = yOffset)
+      .size(item.width, item.height)
       .graphicsLayer {
-        rotationZ = slot.rotation
+        rotationZ = item.rotation
       },
     contentAlignment = Alignment.BottomCenter
   ) {
-    Icon(
-      painter = painterResource(id = slot.resId),
+    Image(
+      painter = painterResource(id = item.resId),
       modifier = Modifier.fillMaxHeight(),
       contentDescription = "Book",
-      tint = Color.Unspecified
+      contentScale = ContentScale.Fit
     )
   }
 }

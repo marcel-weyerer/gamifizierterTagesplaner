@@ -13,6 +13,8 @@ import androidx.navigation.compose.*
 import com.example.gamifiziertertagesplaner.feature.achievements.AchievementsScreen
 import com.example.gamifiziertertagesplaner.feature.bookshelf.BookshelfScreen
 import com.example.gamifiziertertagesplaner.feature.createTask.CreateTaskScreen
+import com.example.gamifiziertertagesplaner.feature.endOfDay.EndOfDayScreen
+import com.example.gamifiziertertagesplaner.feature.home.HomeViewModel
 import com.example.gamifiziertertagesplaner.feature.home.MainScreen
 import com.example.gamifiziertertagesplaner.feature.login.LoginScreen
 import com.example.gamifiziertertagesplaner.feature.login.SignUpScreen
@@ -22,6 +24,9 @@ import com.example.gamifiziertertagesplaner.feature.shop.ShopScreen
 import com.example.gamifiziertertagesplaner.firestore.AuthViewModel
 import com.example.gamifiziertertagesplaner.firestore.Task
 import com.example.gamifiziertertagesplaner.navigation.Routes
+import com.google.firebase.Timestamp
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -29,19 +34,38 @@ fun App() {
   // Setup navigation to all composable screens
   val navController = rememberNavController()
   val authViewModel: AuthViewModel = viewModel()
+  val homeViewModel: HomeViewModel = viewModel()
+
+  val profile = authViewModel.userProfile
 
   // Task currently being edited (null = create mode)
   var taskToEdit by remember { mutableStateOf<Task?>(null) }
 
-  LaunchedEffect(Unit) {
-    if (authViewModel.repositoryCurrentUser() != null) {
-      navController.navigate(Routes.BOOKSHELF) {
-        popUpTo(0) { inclusive = true }
-      }
-    } else {
+  var initialNavigationDone by remember { mutableStateOf(false) }
+
+  LaunchedEffect(authViewModel.repositoryCurrentUser(), profile) {
+    if (initialNavigationDone) return@LaunchedEffect
+
+    val currentUser = authViewModel.repositoryCurrentUser()
+
+    if (currentUser == null) {
+      // not logged in → go to login
       navController.navigate(Routes.LOGIN) {
         popUpTo(0) { inclusive = true }
       }
+      initialNavigationDone = true
+    } else if (profile != null) {
+      // logged in and profile loaded
+      if (hasDayEnded(profile.endOfDayTime)) {
+        navController.navigate(Routes.ENDOFDAY) {
+          popUpTo(0) { inclusive = true }
+        }
+      } else {
+        navController.navigate(Routes.HOME) {
+          popUpTo(0) { inclusive = true }
+        }
+      }
+      initialNavigationDone = true
     }
   }
 
@@ -61,7 +85,7 @@ fun App() {
       )
     }
 
-    composable("signup") {
+    composable(Routes.SIGNUP) {
       SignUpScreen(
         authViewModel = authViewModel,
         onSignedUp = {
@@ -77,6 +101,7 @@ fun App() {
 
     composable(Routes.HOME) {         // Home Screen
       MainScreen(
+        homeViewModel = homeViewModel,
         onOpenCreateTask = { navController.navigate(Routes.CREATE_TASK) },
         onOpenEditTask = { task ->
           taskToEdit = task              // store the task to edit
@@ -153,5 +178,27 @@ fun App() {
         onOpenBookshelf = { navController.navigate(Routes.BOOKSHELF) }
       )
     }
+
+    composable(Routes.ENDOFDAY) {    // EndOfDay Screen
+      EndOfDayScreen(
+        homeViewModel = homeViewModel,
+        authViewModel = authViewModel,
+        onOpenHome = { navController.navigate(Routes.HOME) }
+      )
+    }
   }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun hasDayEnded(endOfDayTime: Timestamp?): Boolean {
+  if (endOfDayTime == null) return false
+
+  val endDateTime = endOfDayTime.toDate()
+    .toInstant()
+    .atZone(ZoneId.systemDefault())
+    .toLocalDateTime()
+
+  val nowDateTime = LocalDateTime.now()
+
+  return nowDateTime >= endDateTime
 }

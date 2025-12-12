@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.launch
 
@@ -148,28 +149,6 @@ class AuthViewModel(
     }
   }
 
-  fun updateProfilePicture(
-    imageBytes: ByteArray,
-    onSuccess: () -> Unit = {}
-  ) {
-    isLoading = true
-    errorMessage = null
-
-    viewModelScope.launch {
-      val result = repository.updateProfilePicture(imageBytes)
-      isLoading = false
-
-      result
-        .onSuccess { updated ->
-          userProfile = updated
-          onSuccess()
-        }
-        .onFailure { e ->
-          errorMessage = e.message
-        }
-    }
-  }
-
   fun buyShopItems(
     totalPrice: Int,
     bookAmount: Int,
@@ -198,6 +177,24 @@ class AuthViewModel(
         .onFailure { e ->
           errorMessage = e.message
         }
+    }
+  }
+
+  fun updateCreateListReminder(minutes: Int?) {
+    viewModelScope.launch {
+      repository.updateCreateListReminder(minutes)
+    }
+  }
+
+  fun updateEndOfDay(timestamp: Timestamp) {
+    viewModelScope.launch {
+      repository.updateEndOfDay(timestamp)
+    }
+  }
+
+  fun updateUserPoints(points: Int) {
+    viewModelScope.launch {
+      repository.updateUserPoints(points)
     }
   }
 }

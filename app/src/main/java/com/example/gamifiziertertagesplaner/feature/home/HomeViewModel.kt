@@ -105,4 +105,26 @@ class HomeViewModel (
       .filter { it.state == 0 }
       .sumOf { it.points }
   }
+
+  fun getTaskCount(): Int {
+    return _tasks.value.size
+  }
+
+  fun getDoneTasks(): Int {
+    return _tasks.value.count { it.state == 0 }
+  }
+
+  fun deleteDoneTasks() {
+    viewModelScope.launch {
+      val result = repository.deleteAllUnfinishedTasks()
+      result
+        .onSuccess {
+          loadTasks()   // reload fresh list
+        }
+        .onFailure { e ->
+          _errorMessage.value = e.message
+        }
+    }
+  }
+
 }

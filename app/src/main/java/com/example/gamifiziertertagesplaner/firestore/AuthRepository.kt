@@ -1,5 +1,6 @@
 package com.example.gamifiziertertagesplaner.firestore
 
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
@@ -58,7 +59,6 @@ class AuthRepository(
       Result.failure(e)
     }
   }
-
 
 
   suspend fun loginUser(
@@ -157,32 +157,6 @@ class AuthRepository(
     }
   }
 
-
-  suspend fun updateProfilePicture(imageBytes: ByteArray): Result<UserProfile> {
-    val user = auth.currentUser ?: return Result.failure(Exception("No logged-in user"))
-    val uid = user.uid
-
-    return try {
-      val ref = storage.getReference("profile_pictures/$uid.jpg")
-      ref.putBytes(imageBytes).await()
-      val downloadUrl = ref.downloadUrl.await().toString()
-
-      firestore.collection("users")
-        .document(uid)
-        .update("photoUrl", downloadUrl)
-        .await()
-
-      val snapshot = firestore.collection("users").document(uid).get().await()
-      val profile = snapshot.toObject(UserProfile::class.java)
-        ?: return Result.failure(Exception("User profile not found"))
-
-      Result.success(profile)
-
-    } catch (e: Exception) {
-      Result.failure(e)
-    }
-  }
-
   suspend fun buyShopItems(
     totalPrice: Int,
     bookAmount: Int,
@@ -209,12 +183,14 @@ class AuthRepository(
         }
 
         // Update user data
-        tx.update(userDocRef, mapOf(
-          "userPoints" to (currentPoints - totalPrice),
-          "boughtBooks" to (currentBooks + bookAmount),
-          "boughtPlants" to (currentPlants + plantAmount),
-          "boughtDecoration" to (currentDecor + decorationAmount)
-        ))
+        tx.update(
+          userDocRef, mapOf(
+            "userPoints" to (currentPoints - totalPrice),
+            "boughtBooks" to (currentBooks + bookAmount),
+            "boughtPlants" to (currentPlants + plantAmount),
+            "boughtDecoration" to (currentDecor + decorationAmount)
+          )
+        )
       }.await()
 
       // Afterwards: load new profile
@@ -224,6 +200,78 @@ class AuthRepository(
 
       Result.success(updatedProfile)
 
+    } catch (e: Exception) {
+      Result.failure(e)
+    }
+  }
+
+  suspend fun updateCreateListReminder(minutes: Int?): Result<UserProfile> {
+    val uid = auth.currentUser?.uid ?: return Result.failure(Exception("No logged-in user"))
+
+    return try {
+      firestore.collection("users").document(uid)
+        .update("createListReminderMinutes", minutes)
+        .await()
+
+      val snapshot = firestore.collection("users")
+        .document(uid)
+        .get()
+        .await()
+
+      val updatedProfile = snapshot.toObject(UserProfile::class.java)
+      if (updatedProfile != null) {
+        Result.success(updatedProfile)
+      } else {
+        Result.failure(Exception("User profile not found after update"))
+      }
+    } catch (e: Exception) {
+      Result.failure(e)
+    }
+  }
+
+  suspend fun updateEndOfDay(timestamp: Timestamp?): Result<UserProfile> {
+    val uid = auth.currentUser?.uid ?: return Result.failure(Exception("No logged-in user"))
+
+    return try {
+      firestore.collection("users").document(uid)
+        .update("endOfDayTime", timestamp)
+        .await()
+
+      val snapshot = firestore.collection("users")
+        .document(uid)
+        .get()
+        .await()
+
+      val updatedProfile = snapshot.toObject(UserProfile::class.java)
+      if (updatedProfile != null) {
+        Result.success(updatedProfile)
+      } else {
+        Result.failure(Exception("User profile not found after update"))
+      }
+    } catch (e: Exception) {
+      Result.failure(e)
+    }
+  }
+
+  suspend fun updateUserPoints(points: Int): Result<UserProfile> {
+    val uid = auth.currentUser?.uid ?: return Result.failure(Exception("No logged-in user"))
+
+    return try {
+      firestore.collection("users").document(uid)
+        .update("userPoints", points)
+        .await()
+
+      val snapshot = firestore.collection("users")
+        .document(uid)
+        .get()
+        .await()
+
+      val updatedProfile = snapshot.toObject(UserProfile::class.java)
+      if (updatedProfile != null) {
+        Result.success(updatedProfile)
+      } else {
+        Result.failure(Exception("User profile not found after update"))
+      }
     } catch (e: Exception) {
       Result.failure(e)
     }

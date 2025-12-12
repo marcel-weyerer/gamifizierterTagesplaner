@@ -2,7 +2,6 @@ package com.example.gamifiziertertagesplaner.feature.home
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,7 +32,6 @@ import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -55,11 +53,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.gamifiziertertagesplaner.R
 import com.example.gamifiziertertagesplaner.components.BottomAppBarOption
 import com.example.gamifiziertertagesplaner.components.CustomBottomAppBar
 import com.example.gamifiziertertagesplaner.components.SectionHeader
+import com.example.gamifiziertertagesplaner.components.TaskProgressBar
 import com.example.gamifiziertertagesplaner.firestore.Task
 import com.example.gamifiziertertagesplaner.ui.theme.MediumBrown
 import com.example.gamifiziertertagesplaner.ui.theme.PriorityOrange
@@ -74,7 +72,7 @@ import java.util.Locale
 
 @Composable
 fun MainScreen(
-  viewModel: HomeViewModel = viewModel(),
+  homeViewModel: HomeViewModel,
   onOpenHome: () -> Unit,
   onOpenCreateTask: () -> Unit,
   onOpenEditTask: (Task) -> Unit,
@@ -114,7 +112,7 @@ fun MainScreen(
       )
     }
   ) { innerPadding ->
-    HomeScreenContent(innerPadding, viewModel, onOpenCreateTask, onOpenEditTask, onOpenBookshelf, onOpenSettings)
+    HomeScreenContent(innerPadding, homeViewModel, onOpenCreateTask, onOpenEditTask, onOpenBookshelf, onOpenSettings)
   }
 }
 
@@ -446,43 +444,6 @@ private fun TaskList(
     }
   }
 }
-
-/**
- * Custom composable for the progress bar.
- * It shows the progress of the finished task by using the reveived points and the total points.
- *
- * @param receivedPoints  Number of received points from finished tasks.
- * @param totalPoints     Total number of points from all tasks of the day.
- */
-@Composable
-private fun TaskProgressBar(
-  receivedPoints: Int,
-  totalPoints: Int
-) {
-  val targetProgress = if (totalPoints > 0) (receivedPoints.toFloat() / totalPoints) else 0f
-
-  // Smooth animation between values
-  val animatedProgress by animateFloatAsState(targetValue = targetProgress)
-
-  Surface(
-    modifier = Modifier
-      .fillMaxWidth()
-      .padding(horizontal = 24.dp, vertical = 10.dp),
-    color = MaterialTheme.colorScheme.secondary,
-    shape = RoundedCornerShape(cornerRadius),
-    shadowElevation = shadowElevation
-  ) {
-    LinearProgressIndicator(
-      progress = { animatedProgress },
-      modifier = Modifier
-        .fillMaxWidth()
-        .height(24.dp),
-      color = MaterialTheme.colorScheme.onSecondary,
-      trackColor = MaterialTheme.colorScheme.secondary
-    )
-  }
-}
-
 
 /**
  * Composable for a single task. It contains all information about the task and options to delete

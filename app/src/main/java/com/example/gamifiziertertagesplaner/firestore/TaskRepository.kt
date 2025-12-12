@@ -80,4 +80,31 @@ class TaskRepository(
   suspend fun deleteTask(taskId: String) {
     tasksCollection.document(taskId).delete().await()
   }
+
+  suspend fun deleteAllUnfinishedTasks(): Result<Unit> {
+    val uid = currentUserId()
+
+    return try {
+      // 1) load all tasks with state == 0 for this user
+      val snapshot = tasksCollection
+        .whereEqualTo("userId", uid)
+        .whereEqualTo("state", 0)
+        .get()
+        .await()
+
+      // 2) delete them in a batch (max 500 docs)
+      val batch = db.batch()
+      snapshot.documents.forEach { doc ->
+        batch.delete(doc.reference)
+      }
+
+      batch.commit().await()
+
+      Result.success(Unit)
+
+    } catch (e: Exception) {
+      Result.failure(e)
+    }
+  }
+
 }

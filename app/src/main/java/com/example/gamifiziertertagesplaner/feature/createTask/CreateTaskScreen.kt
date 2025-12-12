@@ -5,7 +5,6 @@ import androidx.annotation.RequiresApi
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,23 +18,21 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
+import com.example.gamifiziertertagesplaner.R
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.Timelapse
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TimePicker
-import androidx.compose.material3.TimePickerDefaults
 import androidx.compose.material3.TimePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
@@ -48,10 +45,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.gamifiziertertagesplaner.components.ActionButton
+import com.example.gamifiziertertagesplaner.components.DialTimePicker
 import com.example.gamifiziertertagesplaner.components.SectionHeader
 import com.example.gamifiziertertagesplaner.components.TextInputField
 import com.example.gamifiziertertagesplaner.firestore.Task
@@ -113,6 +113,10 @@ fun CreateTaskScreen(
     is24Hour = true,
   )
 
+  var isStartTimeSet by rememberSaveable(taskToEdit?.id) {
+    mutableStateOf(taskToEdit?.startTime != null)
+  }
+
   val durationState = rememberTimePickerState(
     initialHour = (taskToEdit?.duration ?: 0) / 60,
     initialMinute = (taskToEdit?.duration ?: 0) % 60,
@@ -120,7 +124,7 @@ fun CreateTaskScreen(
   )
 
   var reminderState by rememberSaveable(taskToEdit?.id) {
-    mutableIntStateOf(taskToEdit?.reminder ?: 10)
+    mutableIntStateOf(taskToEdit?.reminder ?: 0)
   }
 
   Surface(    // background
@@ -177,6 +181,13 @@ fun CreateTaskScreen(
       SectionHeader("Startzeit + Dauer")
       TimesInputBox(
         timePickerState = timePickerState,
+        isStartTimeSet = isStartTimeSet,
+        onStartTimeSetChange = { isSet ->
+          isStartTimeSet = isSet
+          if (!isSet) {
+            reminderState = 0
+          }
+        },
         durationState = durationState,
         onStartTimeChange = { newHour, newMinute ->
           timePickerState.hour = newHour
@@ -193,7 +204,8 @@ fun CreateTaskScreen(
       ReminderPicker(
         modifier = Modifier.fillMaxWidth(),
         state = reminderState,
-        onStateChange = { newValue -> reminderState = newValue }
+        onStateChange = { newValue -> reminderState = newValue },
+        enabled = isStartTimeSet
       )
 
       Spacer(modifier = Modifier.height(24.dp))
@@ -217,6 +229,11 @@ fun CreateTaskScreen(
           onClick = {
             val title = titleState.text.toString().ifEmpty { "Neuer Task" }
             val description = descriptionState.text.toString().takeIf { it != "" }
+            val startTime: Timestamp? = if (isStartTimeSet) {
+              createTimeStamp(timePickerState)
+            } else {
+              null
+            }
             val duration = (durationState.hour * 60 + durationState.minute).takeIf { it != 0 }
             val reminder = reminderState.takeIf { it != 0 }
 
@@ -227,7 +244,7 @@ fun CreateTaskScreen(
                 title = title,
                 priority = priorityState.intValue,
                 description = description,
-                startTime = createTimeStamp(timePickerState),
+                startTime = startTime,
                 duration = duration,
                 reminder = reminder,
                 state = taskToEdit.state
@@ -238,7 +255,7 @@ fun CreateTaskScreen(
                 title = title,
                 priority = priorityState.intValue,
                 description = description,
-                startTime = createTimeStamp(timePickerState),
+                startTime = startTime,
                 duration = duration,
                 reminder = reminder
               )
@@ -260,18 +277,24 @@ fun CreateTaskScreen(
 private fun TimesInputBox(
   timePickerState: TimePickerState,
   durationState: TimePickerState,
+  isStartTimeSet: Boolean,
+  onStartTimeSetChange: (Boolean) -> Unit,
   onStartTimeChange: (Int, Int) -> Unit,
   onDurationChange: (Int, Int) -> Unit
 ) {
   var showStartTimePicker by remember { mutableStateOf(false) }
   var showDurationPicker by remember { mutableStateOf(false) }
 
-  val startTimeString = String.format(
-    Locale.getDefault(),
-    "%02d:%02d",
-    timePickerState.hour,
-    timePickerState.minute
-  )
+  val startTimeString = if (isStartTimeSet) {
+    String.format(
+      Locale.getDefault(),
+      "%02d:%02d",
+      timePickerState.hour,
+      timePickerState.minute
+    )
+  } else {
+    "- - : - -"
+  }
   val durationString = "${durationState.hour * 60 + durationState.minute}  Minuten"
 
   Surface(
@@ -290,7 +313,10 @@ private fun TimesInputBox(
       TimeInputField(
         onClick = { showStartTimePicker = !showStartTimePicker },
         icon = Icons.Default.AccessTime,
-        timeString = startTimeString
+        timeString = startTimeString,
+        isStartTimeSet = isStartTimeSet,
+        painterResource = painterResource(R.drawable.xmark),
+        onDelete = { onStartTimeSetChange(false) }
       )
 
       HorizontalDivider(
@@ -313,6 +339,7 @@ private fun TimesInputBox(
           onDismiss = { showStartTimePicker = false },
           onConfirm = {
             onStartTimeChange(timePickerState.hour, timePickerState.minute)
+            onStartTimeSetChange(true)
             showStartTimePicker = false
           }
         )
@@ -334,7 +361,14 @@ private fun TimesInputBox(
 }
 
 @Composable
-private fun TimeInputField(onClick: () -> Unit, icon: ImageVector, timeString: String) {
+private fun TimeInputField(
+  onClick: () -> Unit,
+  icon: ImageVector,
+  timeString: String,
+  isStartTimeSet: Boolean = false,
+  painterResource: Painter? = null,
+  onDelete: (() -> Unit)? = null
+) {
   Row(
     modifier = Modifier
       .fillMaxWidth()
@@ -352,77 +386,25 @@ private fun TimeInputField(onClick: () -> Unit, icon: ImageVector, timeString: S
     Spacer(Modifier.width(12.dp))
 
     Text(
+      modifier = Modifier.weight(1f),
       text = timeString,
       style = MaterialTheme.typography.bodyMedium,
       color = MaterialTheme.colorScheme.onSecondary
     )
-  }
-}
 
-@OptIn(ExperimentalMaterial3Api::class)
-@ExperimentalMaterial3Api
-@Composable
-private fun DialTimePicker(
-  timePickerState: TimePickerState,
-  title: String,
-  onDismiss: () -> Unit,
-  onConfirm: () -> Unit,
-) {
-  AlertDialog(
-    title = {
-      Box(
-        modifier = Modifier
-          .fillMaxWidth()
-          .padding(bottom = 24.dp),
-        contentAlignment = Alignment.Center
+    if (isStartTimeSet && painterResource != null && onDelete != null) {
+      IconButton(
+        onClick = onDelete,
+        modifier = Modifier.size(24.dp)
       ) {
-        Text(
-          text = title,
-          style = MaterialTheme.typography.headlineSmall,
-          color = MaterialTheme.colorScheme.secondary
+        Icon(
+          painter = painterResource,
+          contentDescription = null,
+          tint = MaterialTheme.colorScheme.onSecondary
         )
       }
-    },
-    onDismissRequest = onDismiss,
-    confirmButton = {
-      Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly
-      ) {
-        TextButton(onClick = onDismiss) {
-          Text(
-            text = "Abbrechen",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.secondary
-          )
-        }
-        TextButton(onClick = onConfirm) {
-          Text(
-            text = "OK",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.secondary
-          )
-        }
-      }
-    },
-    dismissButton = {},
-    text = {
-      TimePicker(
-        state = timePickerState,
-        colors = TimePickerDefaults.colors(
-          clockDialColor = MaterialTheme.colorScheme.secondary,
-          selectorColor = MaterialTheme.colorScheme.surface,
-          clockDialSelectedContentColor = MaterialTheme.colorScheme.secondary,
-          clockDialUnselectedContentColor = MaterialTheme.colorScheme.surface,
-          timeSelectorSelectedContainerColor = MaterialTheme.colorScheme.secondary,
-          timeSelectorUnselectedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-          timeSelectorSelectedContentColor = MaterialTheme.colorScheme.onSecondary,
-          timeSelectorUnselectedContentColor = MaterialTheme.colorScheme.surface
-        )
-      )
-    },
-    containerColor = MaterialTheme.colorScheme.surface
-  )
+    }
+  }
 }
 
 /**
@@ -432,13 +414,18 @@ private fun DialTimePicker(
  * @param onStateChange  The callback to be invoked when the state changes
  */
 @Composable
-private fun ReminderPicker(modifier: Modifier, state: Int, onStateChange: (Int) -> Unit) {
+private fun ReminderPicker(
+  modifier: Modifier,
+  state: Int,
+  onStateChange: (Int) -> Unit,
+  enabled: Boolean
+) {
   val options = listOf(0, 5, 10, 30, 60)
 
   ExpandableRadioPicker(
     modifier = modifier,
     value = state,
-    onValueChange = onStateChange,
+    onValueChange = { if (enabled) onStateChange(it) },
     options = options,
     labelFor = { minutes ->
       when (minutes) {
@@ -454,7 +441,13 @@ private fun ReminderPicker(modifier: Modifier, state: Int, onStateChange: (Int) 
       if (minutes == 0) Icons.Default.NotificationsOff
       else Icons.Default.NotificationsActive
     },
-    tintFor = { MaterialTheme.colorScheme.onSecondary }
+    tintFor = {
+      if (enabled)
+        MaterialTheme.colorScheme.onSecondary
+      else
+        MaterialTheme.colorScheme.surfaceVariant
+    },
+    enabled = enabled
   )
 }
 
@@ -501,7 +494,8 @@ private fun <T> ExpandableRadioPicker(
   labelFor: (T) -> String,
   iconFor: (T) -> ImageVector,
   tintFor: @Composable (T) -> Color,
-  iconOnly: Boolean = false
+  iconOnly: Boolean = false,
+  enabled: Boolean = true
 ) {
   var expanded by remember { mutableStateOf(false) }
 
@@ -532,13 +526,13 @@ private fun <T> ExpandableRadioPicker(
           Text(
             text = labelFor(value),
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSecondary
+            color = tintFor(value)
           )
         }
       }
 
       // Options
-      if (expanded) {
+      if (expanded && enabled) {
         Column {
           HorizontalDivider(
             modifier = Modifier
@@ -572,7 +566,8 @@ private fun PickerOptionRow(
   Row(
     modifier = Modifier
       .fillMaxWidth()
-      .padding(top = 12.dp),
+      .padding(top = 12.dp)
+      .clickable(onClick = onClick),
     verticalAlignment = Alignment.CenterVertically
   ) {
     RadioButton(

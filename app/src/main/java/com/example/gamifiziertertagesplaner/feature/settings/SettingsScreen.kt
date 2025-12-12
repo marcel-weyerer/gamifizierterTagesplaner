@@ -1,17 +1,16 @@
 package com.example.gamifiziertertagesplaner.feature.settings
 
+import android.os.Build
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -20,26 +19,28 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import com.example.gamifiziertertagesplaner.R
 import com.example.gamifiziertertagesplaner.components.ActionButton
 import com.example.gamifiziertertagesplaner.components.BottomAppBarOption
 import com.example.gamifiziertertagesplaner.components.BottomSheet
 import com.example.gamifiziertertagesplaner.components.CustomBottomAppBar
+import com.example.gamifiziertertagesplaner.components.DialTimePicker
 import com.example.gamifiziertertagesplaner.components.EmailContent
+import com.example.gamifiziertertagesplaner.components.EndOfDayContent
 import com.example.gamifiziertertagesplaner.components.NotificationContent
 import com.example.gamifiziertertagesplaner.components.PasswordContent
 import com.example.gamifiziertertagesplaner.components.ProfilePictureContent
@@ -49,9 +50,16 @@ import com.example.gamifiziertertagesplaner.components.SettingsType
 import com.example.gamifiziertertagesplaner.components.TopScreenTitle
 import com.example.gamifiziertertagesplaner.components.UsernameContent
 import com.example.gamifiziertertagesplaner.firestore.AuthViewModel
+import com.example.gamifiziertertagesplaner.notifications.DailyReminderScheduler
 import com.example.gamifiziertertagesplaner.ui.theme.PriorityRed
+import com.google.firebase.Timestamp
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.util.Date
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -75,6 +83,48 @@ fun SettingsScreen(
 
   val newPasswordState = remember { TextFieldState() }
   val newPasswordConfirmState = remember { TextFieldState() }
+
+  // End of day states
+  // Timestamp from Firestore
+  val initialEndOfDayTimestamp = authViewModel.userProfile?.endOfDayTime
+
+  // Derive initial hour + minute for the picker
+  val (initialHour, initialMinute) = remember(initialEndOfDayTimestamp) {
+    if (initialEndOfDayTimestamp != null) {
+      val localTime = initialEndOfDayTimestamp.toDate()
+        .toInstant()
+        .atZone(ZoneId.systemDefault())
+        .toLocalTime()
+
+      localTime.hour to localTime.minute
+    } else {
+      // default 18:00 if not set
+      18 to 0
+    }
+  }
+
+  // TimePicker state based on timestamp
+  val endOfDayTimePickerState = rememberTimePickerState(
+    initialHour = initialHour,
+    initialMinute = initialMinute,
+    is24Hour = true,
+  )
+
+  var selectedEndOfDayTime by remember { mutableStateOf(initialEndOfDayTimestamp) }
+  var showEndOfDayTimePicker by remember { mutableStateOf(false) }
+
+  // Notification states
+  val initialReminderMinutes = authViewModel.userProfile?.createListReminderMinutes ?: (10 * 60) // default 10:00
+
+
+  var selectedReminderMinutes by remember { mutableIntStateOf(initialReminderMinutes) }
+  var showReminderTimePicker by remember { mutableStateOf(false) }
+
+  val reminderTimePickerState = rememberTimePickerState(
+    initialHour = initialReminderMinutes / 60,
+    initialMinute = initialReminderMinutes % 60,
+    is24Hour = true
+  )
 
   fun openSheet(type: SettingsType) {
     currentType = type
@@ -154,10 +204,23 @@ fun SettingsScreen(
           )
         }
       ),
+      SettingsType.ENDOFDAY to SettingsContent(
+        title = "Tagesabschluss anpassen",
+        description = "Passe deine Tagesabschluss Zeit an",
+        content = {
+          EndOfDayContent(
+            onOpenEndOfDay = { showEndOfDayTimePicker = true }
+          )
+        }
+      ),
       SettingsType.NOTIFICATION to SettingsContent(
         title = "Benachrichtigungen anpassen",
         description = "Passe deine Benachrichtigungen an",
-        content = { NotificationContent() }
+        content = {
+          NotificationContent(
+            onOpenDailyReminder = { showReminderTimePicker = true }
+          )
+        }
       )
     )
   }
@@ -210,31 +273,18 @@ fun SettingsScreen(
           .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally
       ) {
-        val profileImageUrl = authViewModel.userProfile?.photoUrl
         val username = authViewModel.userProfile?.username ?: "User"
 
         IconButton(
           onClick = { openSheet(SettingsType.PROFILE_PICTURE) },
           modifier = Modifier.size(150.dp)
         ) {
-
-          if (profileImageUrl != null) {
-            AsyncImage(
-              model = profileImageUrl,
-              contentDescription = "Profile Picture",
-              modifier = Modifier
-                .fillMaxSize()
-                .clip(CircleShape),
-              contentScale = ContentScale.Crop
-            )
-          } else {
             Icon(
-              imageVector = Icons.Default.Circle,
+              painter = painterResource(R.drawable.user),
               contentDescription = "Default Profile Icon",
               modifier = Modifier.fillMaxSize(),
-              tint = MaterialTheme.colorScheme.onBackground
+              tint = Color.Unspecified
             )
-          }
         }
 
         Text(
@@ -269,6 +319,44 @@ fun SettingsScreen(
           text = "E-Mail ändern"
         )
 
+        SectionHeader("Tagesabschluss")
+
+        ActionButton(
+          onClick = { openSheet(SettingsType.ENDOFDAY) },
+          modifier = Modifier.fillMaxWidth(),
+          text = "Tagesabschluss anpassen"
+        )
+
+        // Time picker dialog for "Tagesabschluss anpassen"
+        if (showEndOfDayTimePicker) {
+          DialTimePicker(
+            timePickerState = endOfDayTimePickerState,
+            title = "Abschlusszeit",
+            onDismiss = { showEndOfDayTimePicker = false },
+            onConfirm = {
+              // Build a LocalDateTime
+              val today = LocalDate.now()
+              val localDateTime = LocalDateTime.of(
+                today.year,
+                today.month,
+                today.dayOfMonth,
+                endOfDayTimePickerState.hour,
+                endOfDayTimePickerState.minute
+              )
+
+              val instant = localDateTime
+                .atZone(ZoneId.systemDefault())
+                .toInstant()
+
+              // Store as Timestamp
+              selectedEndOfDayTime = Timestamp(Date.from(instant))
+
+              showEndOfDayTimePicker = false
+            }
+          )
+        }
+
+
         SectionHeader("Benachrichtigung")
 
         ActionButton(
@@ -276,6 +364,22 @@ fun SettingsScreen(
           modifier = Modifier.fillMaxWidth(),
           text = "Benachrichtigungen anpassen"
         )
+
+        // Time picker dialog for "Tagesplan Benachrichtigung"
+        if (showReminderTimePicker) {
+          DialTimePicker(
+            timePickerState = reminderTimePickerState,
+            title = "Tagesplan",
+            onDismiss = { showReminderTimePicker = false },
+            onConfirm = {
+              val hour = reminderTimePickerState.hour
+              val minute = reminderTimePickerState.minute
+              selectedReminderMinutes = hour * 60 + minute
+
+              showReminderTimePicker = false
+            }
+          )
+        }
 
         TextButton(
           onClick = { authViewModel.logout(onLoggedOut) },
@@ -346,7 +450,20 @@ fun SettingsScreen(
 
                 SettingsType.PROFILE_PICTURE -> {}
 
+                SettingsType.ENDOFDAY -> {
+                  if (selectedEndOfDayTime == null) {
+                    Toast.makeText(context, "Bitte eine Zeit auswählen", Toast.LENGTH_SHORT).show()
+                  } else {
+                    authViewModel.updateEndOfDay(selectedEndOfDayTime!!)
+                    Toast.makeText(context, "Tagesabschluss aktualisiert", Toast.LENGTH_SHORT).show()
+                    closeSheet()
+                  }
+                }
+
                 SettingsType.NOTIFICATION -> {
+                  authViewModel.updateCreateListReminder(selectedReminderMinutes)
+                  DailyReminderScheduler.scheduleDailyReminder(context, selectedReminderMinutes)
+
                   Toast.makeText(context, "Benachrichtigung aktualisiert", Toast.LENGTH_SHORT).show()
                   closeSheet()
                 }
