@@ -14,8 +14,17 @@ import com.example.gamifiziertertagesplaner.R
  */
 class DailyReminderReceiver : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {
+    if (intent.action != "com.example.gamifiziertertagesplaner.DAILY_REMINDER") return
+
     showDailyReminderNotification(context)
+
+    // schedule tomorrow (exact) after firing
+    val (enabled, minutes) = DailyReminderScheduler.readSavedConfig(context)
+    if (enabled) {
+      DailyReminderScheduler.scheduleNextExact(context, minutes)
+    }
   }
+
 
   private fun showDailyReminderNotification(context: Context) {
     val notificationManager =
