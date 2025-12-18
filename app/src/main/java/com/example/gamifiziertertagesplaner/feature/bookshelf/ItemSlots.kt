@@ -6,8 +6,8 @@ import androidx.compose.ui.unit.dp
 import com.example.gamifiziertertagesplaner.R
 
 /**
- * Represents a slot on the bookshelf where a book can be placed.
- * It contains the book's offset in the slot, its size, and its rotation.
+ * Represents a slot on the bookshelf where an item can be placed.
+ * It contains the item's offset in the slot, its size, and its rotation.
  */
 data class ItemSlot(
   @DrawableRes val resId: Int,

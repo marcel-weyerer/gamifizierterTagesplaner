@@ -3,13 +3,18 @@ package com.example.gamifiziertertagesplaner.feature.home
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -59,11 +64,13 @@ import com.example.gamifiziertertagesplaner.components.CustomBottomAppBar
 import com.example.gamifiziertertagesplaner.components.SectionHeader
 import com.example.gamifiziertertagesplaner.components.TaskProgressBar
 import com.example.gamifiziertertagesplaner.firestore.Task
+import com.example.gamifiziertertagesplaner.ui.theme.Ivory
 import com.example.gamifiziertertagesplaner.ui.theme.MediumBrown
 import com.example.gamifiziertertagesplaner.ui.theme.PriorityOrange
 import com.example.gamifiziertertagesplaner.ui.theme.PriorityRed
 import com.example.gamifiziertertagesplaner.ui.theme.PriorityYellow
 import com.example.gamifiziertertagesplaner.ui.theme.cornerRadius
+import com.example.gamifiziertertagesplaner.ui.theme.focusedShadowElevation
 import com.example.gamifiziertertagesplaner.ui.theme.shadowElevation
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -388,10 +395,21 @@ private fun TaskList(
             val (doneTasks, activeTasks) = sortedTasks.partition { it.state == 0 }
 
             // Build priority groups only from active tasks
+            // Sort them by priority first and then by start time
             val priorityGroups = listOf(1, 2, 3).mapNotNull { priority ->
-              val groupTasks = activeTasks.filter { it.priority == priority }
+              val groupTasks = activeTasks
+                .filter { it.priority == priority }
+                .sortedWith(
+                  compareBy(
+                    { it.startTime == null },
+                    { it.startTime?.seconds ?: Long.MAX_VALUE },
+                    { it.startTime?.nanoseconds ?: Int.MAX_VALUE }
+                  )
+                )
+
               if (groupTasks.isEmpty()) null else priority to groupTasks
             }
+
 
             LazyColumn(
               modifier = Modifier
@@ -464,9 +482,9 @@ private fun TaskView(
 
   Surface(
     modifier = Modifier.fillMaxWidth(),
-    color = MaterialTheme.colorScheme.secondary,
+    color = if (task.state == 2) Ivory else MaterialTheme.colorScheme.secondary,
     shape = RoundedCornerShape(cornerRadius),
-    shadowElevation = shadowElevation,
+    shadowElevation = if (task.state == 2) focusedShadowElevation else shadowElevation,
     onClick = { isExpanded = !isExpanded }
   ) {
     Column(
@@ -527,16 +545,21 @@ private fun MinimalInformation(task: Task, viewModel: HomeViewModel) {
     verticalAlignment = Alignment.CenterVertically
   ) {
     // Check icon button
-    IconButton(
-      modifier = Modifier.size(50.dp),
-      onClick = { viewModel.toggleTaskStatus(task) }
+    Box(
+      modifier = Modifier
+        .size(50.dp)
+        .combinedClickable(
+          interactionSource = remember { MutableInteractionSource() },
+          indication = null,
+          onClick = { viewModel.toggleTaskStatus(task, isLongPress = false) },
+          onLongClick = { viewModel.toggleTaskStatus(task, isLongPress = true) },
+        )
     ) {
-      var painterRes = painterResource(R.drawable.check_state_1)
-
-      when (task.state) {
-        0 -> painterRes = painterResource(R.drawable.check_state_0)
-        1 -> painterRes = painterResource(R.drawable.check_state_1)
-        2 -> painterRes = painterResource(R.drawable.check_state_2)
+      val painterRes = when (task.state) {
+        1 -> painterResource(R.drawable.check_state_1)
+        2 -> painterResource(R.drawable.check_state_2)
+        3 -> painterResource(R.drawable.check_state_1)
+        else -> painterResource(R.drawable.check_state_0)
       }
 
       Icon(
@@ -583,24 +606,38 @@ private fun MinimalInformation(task: Task, viewModel: HomeViewModel) {
       else -> Color.Transparent
     }
 
-    var painterRes = painterResource(R.drawable.bookmark_short)
-
-    when (task.state) {
-      0 -> painterRes = painterResource(R.drawable.bookmark_short)
-      1 -> painterRes = painterResource(R.drawable.bookmark_short)
-      2 -> painterRes = painterResource(R.drawable.bookmark_long)
+    val painterRes = when (task.state) {
+      2 -> painterResource(R.drawable.bookmark_long)
+      else -> painterResource(R.drawable.bookmark_short)
     }
 
-    Icon(
+    Box(
       modifier = Modifier
-        .size(60.dp)
-        .align(Alignment.Top)
-        .offset(y = (-10).dp)
+        .fillMaxHeight()
+        .width(70.dp)
         .padding(end = 10.dp),
-      painter = painterRes,
-      contentDescription = "Priorität",
-      tint = priorityColor,
-    )
+      contentAlignment = Alignment.TopEnd
+    ) {
+      Icon(
+        modifier = Modifier
+          .size(60.dp)
+          .offset(y = (-10).dp),
+        painter = painterRes,
+        contentDescription = "Priorität",
+        tint = priorityColor,
+      )
+
+      if (task.state == 3) {
+        Text(
+          modifier = Modifier
+            .align(Alignment.BottomEnd)
+            .padding(end = 10.dp),
+          text = "Pausiert",
+          style = MaterialTheme.typography.bodySmall,
+          color = MaterialTheme.colorScheme.surfaceVariant,
+        )
+      }
+    }
   }
 }
 
@@ -641,11 +678,27 @@ private fun SecondaryInformation(task: Task, onOpenEditTask: (Task) -> Unit, onS
   ) {
     // Task description
     task.description?.let { description ->
-      Text(
-        text = description,
-        style = MaterialTheme.typography.bodyMedium,
-        color = textColor
-      )
+      Row(
+        modifier = Modifier
+          .fillMaxWidth()
+          .height(IntrinsicSize.Min)
+      ) {
+        Box(
+          modifier = Modifier
+            .fillMaxHeight()
+            .width(2.dp)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+        )
+
+        Text(
+          modifier = Modifier
+            .weight(1f)
+            .padding(horizontal = 12.dp),
+          text = description,
+          style = MaterialTheme.typography.bodyMedium,
+          color = textColor
+        )
+      }
     }
 
     // Reminder information

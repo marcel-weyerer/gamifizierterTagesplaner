@@ -92,6 +92,7 @@ fun BookshelfScreen(
       ) {
         TopScreenTitle(title = "Bookshelf")
 
+        // Bookshelf layout containing the items
         Bookshelf(
           modifier = Modifier
             .fillMaxWidth()
@@ -101,13 +102,13 @@ fun BookshelfScreen(
           boughtPlants = boughtPlants
         )
 
+        // Punktestand
         Column(
           modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 12.dp),
           horizontalAlignment = Alignment.CenterHorizontally
         ) {
-          // Punktestand
           Text(
             text = "Punktestand",
             style = MaterialTheme.typography.headlineSmall,
@@ -126,26 +127,33 @@ fun BookshelfScreen(
   }
 }
 
+/**
+ * Bookshelf layout containing the items.
+ */
 @Composable
-fun Bookshelf(
+private fun Bookshelf(
   modifier: Modifier,
   boughtBooks: Int,
   boughtDecoration: Int,
   boughtPlants: Int
 ) {
+  // Clamp values to valid ranges to prevent IndexOutOfBounds
   val clampedBookCount = boughtBooks.coerceIn(0, bookSlots.size)
   val clampedDecorationCount = boughtDecoration.coerceIn(0, decorationSlots.size)
   val clampedPlantCount = boughtPlants.coerceIn(0, plantSlots.size)
+
+  // Bookshelf layout values
   val shelfGap = 100.dp
   val shelfThickness = 24.dp
   val shelfColor = MaterialTheme.colorScheme.primary
   val totalBookshelfHeight = shelfGap * 3 + shelfThickness * 3
 
+  // States to keep track of visible items
   var visibleBookCount by remember { mutableIntStateOf(0) }
   var visibleDecorationCount by remember { mutableIntStateOf(0) }
   var visiblePlantCount by remember { mutableIntStateOf(0) }
 
-  // Reveal items one-by-one
+  // Reveal books one-by-one
   LaunchedEffect(clampedBookCount) {
     visibleBookCount = 0
     repeat(clampedBookCount) {
@@ -154,7 +162,7 @@ fun Bookshelf(
     }
   }
 
-  // Reveal items one-by-one
+  // Reveal decoration one-by-one
   LaunchedEffect(clampedDecorationCount) {
     visibleDecorationCount = 0
     repeat(clampedDecorationCount) {
@@ -163,7 +171,7 @@ fun Bookshelf(
     }
   }
 
-  // Reveal items one-by-one
+  // Reveal plant one-by-one
   LaunchedEffect(clampedPlantCount) {
     visiblePlantCount = 0
     repeat(clampedPlantCount) {
@@ -191,13 +199,13 @@ fun Bookshelf(
           modifier = Modifier.matchParentSize()
         ) {
           repeat(3) {
-            // gap above shelf
+            // Gap above shelf for items
             Spacer(
               modifier = Modifier
                 .fillMaxWidth()
                 .height(shelfGap)
             )
-            // shelf itself
+            // Shelf
             Box(
               modifier = Modifier
                 .fillMaxWidth()
@@ -211,16 +219,19 @@ fun Bookshelf(
         Box(
           modifier = Modifier.matchParentSize()
         ) {
+          // Books
           for (index in 0 until visibleBookCount) {
             val item = bookSlots[index]
             ItemAtSlot(item = item)
           }
 
+          // Decoration
           for (index in 0 until visibleDecorationCount) {
             val item = decorationSlots[index]
             ItemAtSlot(item = item)
           }
 
+          // Plant
           for (index in 0 until visiblePlantCount) {
             val item = plantSlots[index]
             ItemAtSlot(item = item)
@@ -231,6 +242,9 @@ fun Bookshelf(
   }
 }
 
+/**
+ * Displays an item at a specific slot.
+ */
 @Composable
 private fun ItemAtSlot(item: ItemSlot) {
   val shelfGap = 100.dp

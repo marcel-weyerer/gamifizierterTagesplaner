@@ -12,4 +12,5 @@ object Routes {
   const val SETTINGS = "settings"
   const val POMODORO = "pomodoro"
   const val ENDOFDAY = "endOfDay"
+  const val LOADING = "loading"
 }

@@ -2,6 +2,10 @@ package com.example.gamifiziertertagesplaner.firestore
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
 class TaskRepository(
@@ -15,6 +19,35 @@ class TaskRepository(
   private fun currentUserId(): String {
     return auth.currentUser?.uid
       ?: throw IllegalStateException("No logged in user")
+  }
+
+  fun observeTasks(): Flow<List<Task>> = callbackFlow {
+    val uid = auth.currentUser?.uid
+      ?: run {
+        close(IllegalStateException("No logged in user"))
+        return@callbackFlow
+      }
+
+    val query = tasksCollection
+      .whereEqualTo("userId", uid)
+    // If you want server-side sorting, store priority as number and do:
+    // .orderBy("priority", Query.Direction.DESCENDING)
+
+    val registration: ListenerRegistration = query.addSnapshotListener { snapshot, error ->
+      if (error != null) {
+        close(error)
+        return@addSnapshotListener
+      }
+
+      val tasks = snapshot?.documents
+        ?.mapNotNull { doc -> doc.toObject(Task::class.java)?.copy(id = doc.id) }
+        ?.sortedByDescending { it.priority } // local sort if you don't orderBy in query
+        ?: emptyList()
+
+      trySend(tasks)
+    }
+
+    awaitClose { registration.remove() }
   }
 
   /**

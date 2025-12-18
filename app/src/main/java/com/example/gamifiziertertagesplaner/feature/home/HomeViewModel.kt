@@ -6,6 +6,8 @@ import com.example.gamifiziertertagesplaner.firestore.Task
 import com.example.gamifiziertertagesplaner.firestore.TaskRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -35,7 +37,19 @@ class HomeViewModel (
   val receivedPoints: StateFlow<Int> = _receivedPoints
 
   init {
-    loadTasks()
+    viewModelScope.launch {
+      repository.observeTasks()
+        .onStart { _isLoading.value = true }
+        .catch { e ->
+          _errorMessage.value = e.message
+          _isLoading.value = false
+        }
+        .collect { list ->
+          _tasks.value = list
+          recalculatePoints()
+          _isLoading.value = false
+        }
+    }
   }
 
   fun loadTasks() {
@@ -55,9 +69,17 @@ class HomeViewModel (
     }
   }
 
-  fun toggleTaskStatus(task: Task) {
+  fun toggleTaskStatus(task: Task, isLongPress: Boolean) {
     viewModelScope.launch {
-      val updated = task.copy(state = (task.state + 1) % 3)
+
+      val newState = when (task.state) {
+        1 -> if (isLongPress) 2 else 0
+        2 -> if (isLongPress) 3 else 0
+        3 -> if (isLongPress) 2 else 0
+        else -> 1
+      }
+
+      val updated = task.copy(state = newState)
 
       // Update UI list locally
       _tasks.value = _tasks.value.map { current ->

@@ -21,17 +21,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.gamifiziertertagesplaner.components.ActionButton
+import com.example.gamifiziertertagesplaner.components.CircleBackground
 import com.example.gamifiziertertagesplaner.components.TextInputField
 import com.example.gamifiziertertagesplaner.firestore.AuthViewModel
-import com.example.gamifiziertertagesplaner.ui.theme.Cream
-import com.example.gamifiziertertagesplaner.ui.theme.DarkBrown
-import com.example.gamifiziertertagesplaner.ui.theme.MediumBrown
 import com.example.gamifiziertertagesplaner.ui.theme.PriorityRed
 import kotlinx.coroutines.delay
 
@@ -41,13 +37,14 @@ fun LoginScreen(
   onLoggedIn: () -> Unit,
   onSignUp: () -> Unit
 ) {
+  // Input states
   val emailState = remember { TextFieldState() }
   val passwordState = remember { TextFieldState() }
 
   val isLoading = authViewModel.isLoading
   val error = authViewModel.errorMessage
 
-  // Hide error message after give time
+  // Hide error message after given time
   LaunchedEffect(error) {
     if (error != null) {
       delay(2000)
@@ -60,42 +57,7 @@ fun LoginScreen(
       .fillMaxSize()
       .background(Color.White),
   ) {
-    // Circle background
-    Box(
-      modifier = Modifier
-        .fillMaxSize()
-        .drawBehind {
-          drawCircle(
-            color = Cream,
-            radius = (maxHeight / 3f).toPx(),
-            center = Offset(x = size.width / 2f, y = size.height / 2f + 200)
-          )
-        }
-    )
-
-    Box(
-      modifier = Modifier
-        .fillMaxSize()
-        .drawBehind {
-          drawCircle(
-            color = MediumBrown,
-            radius = (maxHeight / 3f).toPx(),
-            center = Offset(x = size.width / 2f, y = size.height / 3f + 175)
-          )
-        }
-    )
-
-    Box(
-      modifier = Modifier
-        .fillMaxSize()
-        .drawBehind {
-          drawCircle(
-            color = DarkBrown,
-            radius = (maxHeight / 3f).toPx(),
-            center = Offset(x = size.width / 2f, y = 0f)
-          )
-        }
-    )
+    CircleBackground(maxHeight)
 
     Column(
       modifier = Modifier
@@ -131,9 +93,11 @@ fun LoginScreen(
       TextInputField(
         state = passwordState,
         maxHeightLines = 1,
-        placeholder = "Passwort"
+        placeholder = "Passwort",
+        hideInput = true
       )
 
+      // Error message
       Box(
         modifier = Modifier
           .fillMaxWidth()
@@ -155,6 +119,7 @@ fun LoginScreen(
 
       Spacer(modifier = Modifier.height(12.dp))
 
+      // Login button
       ActionButton(
         onClick = {
           val email = emailState.text.toString()
@@ -175,6 +140,7 @@ fun LoginScreen(
 
       Spacer(modifier = Modifier.height(6.dp))
 
+      // Sign-up button
       ActionButton(
         onClick = onSignUp,
         modifier = Modifier.width(150.dp),

@@ -10,6 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.*
+import com.example.gamifiziertertagesplaner.feature.LoadingScreen
 import com.example.gamifiziertertagesplaner.feature.achievements.AchievementsScreen
 import com.example.gamifiziertertagesplaner.feature.bookshelf.BookshelfScreen
 import com.example.gamifiziertertagesplaner.feature.createTask.CreateTaskScreen
@@ -48,35 +49,46 @@ fun App() {
 
     val currentUser = authViewModel.repositoryCurrentUser()
 
-    if (currentUser == null) {
-      // not logged in → go to login
-      navController.navigate(Routes.LOGIN) {
-        popUpTo(0) { inclusive = true }
-      }
-      initialNavigationDone = true
-    } else if (profile != null) {
-      // logged in and profile loaded
-      if (hasDayEnded(profile.endOfDayTime)) {
-        navController.navigate(Routes.ENDOFDAY) {
-          popUpTo(0) { inclusive = true }
+    when {
+      currentUser == null -> {
+        navController.navigate(Routes.LOGIN) {
+          popUpTo(Routes.LOADING) { inclusive = true }
         }
-      } else {
-        navController.navigate(Routes.HOME) {
-          popUpTo(0) { inclusive = true }
-        }
+        initialNavigationDone = true
       }
-      initialNavigationDone = true
+
+      profile == null -> {
+        // Keep showing LoadingScreen when user is logged in, but profile not loaded yet
+      }
+
+      else -> {
+        val target = if (hasDayEnded(profile.endOfDayTime)) Routes.ENDOFDAY else Routes.HOME
+
+        if (target == Routes.HOME) {
+          homeViewModel.loadTasks()
+        }
+
+        navController.navigate(target) {
+          popUpTo(Routes.LOADING) { inclusive = true }
+        }
+        initialNavigationDone = true
+      }
     }
   }
 
   NavHost(
     navController = navController,
-    startDestination = Routes.LOGIN
+    startDestination = Routes.LOADING
   ) {
+    composable (Routes.LOADING) {     // Loading Screen
+      LoadingScreen()
+    }
+
     composable(Routes.LOGIN) {        // Login Screen
       LoginScreen(
         authViewModel = authViewModel,
         onLoggedIn = {
+          homeViewModel.loadTasks()
           navController.navigate(Routes.HOME) {
             popUpTo(Routes.LOGIN) { inclusive = true }
           }
@@ -85,7 +97,7 @@ fun App() {
       )
     }
 
-    composable(Routes.SIGNUP) {
+    composable(Routes.SIGNUP) {       // Signup Screen
       SignUpScreen(
         authViewModel = authViewModel,
         onSignedUp = {

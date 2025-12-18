@@ -1,6 +1,8 @@
 package com.example.gamifiziertertagesplaner.feature.shop
 
 import android.widget.Toast
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -89,19 +91,22 @@ fun ShopScreen(
         .padding(innerPadding),
       horizontalAlignment = Alignment.CenterHorizontally
     ) {
+      // Stats for the amount of each item in the basket
       var bookAmount by remember { mutableIntStateOf(0) }
       var plantAmount by remember { mutableIntStateOf(0) }
       var decotrationAmount by remember { mutableIntStateOf(0) }
 
+      // Calculate the remaining amount of each item the user can buy
       val maxAvailableBooks = bookSlots.size - (authViewModel.userProfile?.boughtBooks ?: 0)
       val maxAvailablePlants = plantSlots.size - (authViewModel.userProfile?.boughtPlants ?: 0)
       val maxAvailableDecorations = decorationSlots.size - (authViewModel.userProfile?.boughtDecoration ?: 0)
 
+      // Price of each item
       val bookPrice = 200
       val plantPrice = 500
       val decorationPrice = 750
 
-      val profilePoints = authViewModel.userProfile?.userPoints ?: 0
+      val userPoints = authViewModel.userProfile?.userPoints ?: 0
 
       TopScreenTitle(title = "Buchladen")
 
@@ -113,7 +118,7 @@ fun ShopScreen(
       )
 
       Text(
-        text = profilePoints.toString(),
+        text = userPoints.toString(),
         style = MaterialTheme.typography.headlineMedium,
         color = MaterialTheme.colorScheme.onBackground,
       )
@@ -134,6 +139,7 @@ fun ShopScreen(
         },
         onReduceAmount = { bookAmount = (bookAmount - 1).coerceIn(0, maxAvailableBooks) }
       )
+
       ItemShopSection(
         item = "Pflanze",
         painterResource = painterResource(R.drawable.plant_shop_icon),
@@ -148,6 +154,7 @@ fun ShopScreen(
         },
         onReduceAmount = { plantAmount = (plantAmount - 1).coerceIn(0, maxAvailablePlants) }
       )
+
       ItemShopSection(
         item = "Dekoration",
         painterResource = painterResource(R.drawable.decoration_shop_icon),
@@ -165,25 +172,26 @@ fun ShopScreen(
 
       Spacer(modifier = Modifier.height(12.dp))
 
+      // Show total price and visually indicate if it is possible to buy
       val totalPrice = (bookPrice * bookAmount) + (plantPrice * plantAmount) + (decorationPrice * decotrationAmount)
-      val color = if (totalPrice > profilePoints) PriorityRed else MaterialTheme.colorScheme.surfaceVariant
-
+      val color = if (totalPrice > userPoints) PriorityRed else MaterialTheme.colorScheme.surfaceVariant
       Text(
         text = "Gesamt - $totalPrice Punkte",
         style = MaterialTheme.typography.bodySmall,
         color = color,
       )
 
+      // Buy button
       ActionButton(
         onClick = {
-          if (totalPrice > 0 && totalPrice <= profilePoints) {
+          if (totalPrice > 0 && totalPrice <= userPoints) {
             authViewModel.buyShopItems(
               totalPrice = totalPrice,
               bookAmount = bookAmount,
               plantAmount = plantAmount,
               decorationAmount = decotrationAmount,
               onSuccess = {
-                // Clear amounts
+                // Clear basket after successful purchase
                 bookAmount = 0
                 plantAmount = 0
                 decotrationAmount = 0
@@ -197,12 +205,15 @@ fun ShopScreen(
         leadingIcon = painterResource(R.drawable.shopping_cart),
         text = "Kaufen",
         isPrimary = true,
-        enabled = totalPrice <= profilePoints
+        enabled = totalPrice <= userPoints
       )
     }
   }
 }
 
+/**
+ * Represents the shopping interaction for a single item type
+ */
 @Composable
 private fun ItemShopSection(
   item: String,
@@ -236,6 +247,9 @@ private fun ItemShopSection(
   }
 }
 
+/**
+ * Button for purchasing an item
+ */
 @Composable
 private fun ItemShopButton(
   modifier: Modifier,
@@ -288,6 +302,10 @@ private fun ItemShopButton(
   }
 }
 
+/**
+ * Displays the amount of an item in the basket.
+ * It includes buttons for increasing and decreasing the amount.
+ */
 @Composable
 private fun ItemAmount(
   itemAmount: Int,
