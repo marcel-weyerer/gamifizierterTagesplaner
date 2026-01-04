@@ -1,6 +1,7 @@
 package com.example.gamifiziertertagesplaner.feature.home
 
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -42,22 +43,32 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import com.example.gamifiziertertagesplaner.R
 import com.example.gamifiziertertagesplaner.components.BottomAppBarOption
 import com.example.gamifiziertertagesplaner.components.CustomBottomAppBar
@@ -72,9 +83,14 @@ import com.example.gamifiziertertagesplaner.ui.theme.PriorityYellow
 import com.example.gamifiziertertagesplaner.ui.theme.cornerRadius
 import com.example.gamifiziertertagesplaner.ui.theme.focusedShadowElevation
 import com.example.gamifiziertertagesplaner.ui.theme.shadowElevation
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.ui.text.style.TextOverflow
+
+
 
 
 @Composable
@@ -392,9 +408,30 @@ private fun TaskList(
 
           else -> {     // Tasks found
             // Split tasks into active and finished tasks
-            val (doneTasks, activeTasks) = sortedTasks.partition { it.state == 0 }
+            val (doneTasks, activeTasksAll) = sortedTasks.partition { it.state == 0 }
 
-            // Build priority groups only from active tasks
+            val millisNow = rememberMillisNow()   // current time in millis
+            val millisToStart = 10 * 60_000L      // 10 minutes before start
+
+            // Move tasks that start soon to the top
+            // Split active tasks into starting soon and active tasks
+            val (startingSoonTasks, activeTasks) = activeTasksAll.partition { task ->
+              val start = task.startTime ?: return@partition false
+              val startMillis = start.seconds * 1000L + start.nanoseconds / 1_000_000L
+              millisNow >= (startMillis - millisToStart)
+            }
+
+            // Sort starting soon tasks by priority and then by starting time
+            val sortedStartingSoonTasks = startingSoonTasks.sortedWith(
+              compareBy<Task>(
+                { it.priority },
+                { it.startTime == null },
+                { it.startTime?.seconds ?: Long.MAX_VALUE },
+                { it.startTime?.nanoseconds ?: Int.MAX_VALUE }
+              )
+            )
+
+            // Build priority groups only from active tasks that do not start soon
             // Sort them by priority first and then by start time
             val priorityGroups = listOf(1, 2, 3).mapNotNull { priority ->
               val groupTasks = activeTasks
@@ -407,7 +444,10 @@ private fun TaskList(
                   )
                 )
 
-              if (groupTasks.isEmpty()) null else priority to groupTasks
+              if (groupTasks.isEmpty())
+                null
+              else
+                priority to groupTasks
             }
 
 
@@ -417,7 +457,20 @@ private fun TaskList(
                 .padding(horizontal = 24.dp)
                 .align(Alignment.TopCenter),
             ) {
-              // Sections for active tasks depending on priority
+              // Section for starting soon tasks
+              if (sortedStartingSoonTasks.isNotEmpty()) {
+                item { SectionHeader(text = "Beginnt bald") }
+
+                items(
+                  items = sortedStartingSoonTasks,
+                  key = { it.id }
+                ) { task ->
+                  TaskView(viewModel, task) { onOpenEditTask(task) }
+                  Spacer(Modifier.height(10.dp))
+                }
+              }
+
+              // Sections for remaining active tasks depending on priority
               priorityGroups.forEach { (priority, groupTasks) ->
                 // Header per priority group
                 item {
@@ -480,39 +533,112 @@ private fun TaskView(
   var isExpanded by remember { mutableStateOf(false) }
   var showDeleteDialog by remember { mutableStateOf(false) }
 
-  Surface(
-    modifier = Modifier.fillMaxWidth(),
-    color = if (task.state == 2) Ivory else MaterialTheme.colorScheme.secondary,
-    shape = RoundedCornerShape(cornerRadius),
-    shadowElevation = if (task.state == 2) focusedShadowElevation else shadowElevation,
-    onClick = { isExpanded = !isExpanded }
-  ) {
-    Column(
-      modifier = Modifier
-        .fillMaxWidth()
-        .animateContentSize()
-    ) {
-      // Minimalistic view
-      MinimalInformation(
-        task = task,
-        viewModel = viewModel
-      )
+  // Completion effect states
+  var isCompleting by remember { mutableStateOf(false) }
+  var measuredHeightPx by remember { mutableIntStateOf(0) }
+  val density = LocalDensity.current
+  val scope = rememberCoroutineScope()
 
-      // Secondary information
-      if (isExpanded) {
-        SecondaryInformation(
+  val targetHeightDp = with(density) { measuredHeightPx.toDp() }
+
+  // Make height grow from 0 to targetHeight
+  val overlayHeight by animateDpAsState(
+    targetValue = if (isCompleting) targetHeightDp else 0.dp,
+    animationSpec = tween(durationMillis = 200, easing = LinearOutSlowInEasing),
+    label = "completeOverlayHeight"
+  )
+
+  val shape = RoundedCornerShape(cornerRadius)
+
+  Box(
+    modifier = Modifier
+      .fillMaxWidth()
+      .onSizeChanged { measuredHeightPx = it.height }   // Measure actual rendered height
+  ) {
+    Surface(
+      modifier = Modifier.fillMaxWidth(),
+      color = if (task.state == 2) Ivory else MaterialTheme.colorScheme.secondary,
+      shape = shape,
+      shadowElevation = if (task.state == 2) focusedShadowElevation else shadowElevation,
+      onClick = { isExpanded = !isExpanded }
+    ) {
+      Column(
+        modifier = Modifier
+          .fillMaxWidth()
+          .animateContentSize()
+      ) {
+        // Minimalistic view
+        MinimalInformation(
           task = task,
-          onOpenEditTask = onOpenEditTask,
-          onShowDeleteDialog = { showDeleteDialog = true }
+          viewModel = viewModel,
+          onShortPressCheck = {
+            if (isCompleting) return@MinimalInformation
+
+            // Only do the effect when state is not 0
+            if (task.state != 0) {
+              isExpanded = false        // Hide secondary information
+              isCompleting = true
+
+              scope.launch {
+                delay(500)    // Keep overlay visible
+                isCompleting = false    // Remove overlay
+                viewModel.toggleTaskStatus(task, isLongPress = false)     // Set task to done
+              }
+            } else {
+              // Change status if effect is done
+              viewModel.toggleTaskStatus(task, isLongPress = false)
+            }
+          },
+          onLongPressCheck = {
+            if (!isCompleting) {
+              viewModel.toggleTaskStatus(task, isLongPress = true)
+            }
+          },
+          isExpanded = isExpanded
+        )
+
+        // Secondary information
+        if (isExpanded && !isCompleting) {
+          SecondaryInformation(
+            task = task,
+            onOpenEditTask = onOpenEditTask,
+            onShowDeleteDialog = { showDeleteDialog = true }
+          )
+        }
+      }
+      if (showDeleteDialog) {
+        CustomAlertDialog(
+          task = task,
+          viewModel = viewModel,
+          onHideDeleteDialog = { showDeleteDialog = false }
         )
       }
     }
-    if (showDeleteDialog) {
-      CustomAlertDialog(
-        task = task,
-        viewModel = viewModel,
-        onHideDeleteDialog = { showDeleteDialog = false }
-      )
+
+    // Overlay task complete effect
+    if (isCompleting) {
+      Surface(
+        modifier = Modifier
+          .fillMaxWidth()
+          .height(overlayHeight)
+          .align(Alignment.Center)
+          .clip(shape)
+          .zIndex(1f),
+        shape = shape,
+        color = Ivory,
+        shadowElevation = 0.dp
+      ) {
+        Box(
+          modifier = Modifier.fillMaxSize(),
+          contentAlignment = Alignment.Center
+        ) {
+          Text(
+            text = "+${task.points} Punkte",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.surfaceVariant
+          )
+        }
+      }
     }
   }
 }
@@ -525,7 +651,13 @@ private fun TaskView(
  * @param viewModel   ViewModel for the Home screen.
  */
 @Composable
-private fun MinimalInformation(task: Task, viewModel: HomeViewModel) {
+private fun MinimalInformation(
+  task: Task,
+  viewModel: HomeViewModel,
+  onShortPressCheck: () -> Unit,
+  onLongPressCheck: () -> Unit,
+  isExpanded: Boolean
+) {
   val textColor = if (task.state == 0) {
     MaterialTheme.colorScheme.surfaceVariant
   } else {
@@ -538,21 +670,50 @@ private fun MinimalInformation(task: Task, viewModel: HomeViewModel) {
     TextDecoration.None
   }
 
+  val haptic = LocalHapticFeedback.current
+
+  val density = LocalDensity.current
+  val iconBoxSize = with(LocalDensity.current) { (50.dp).roundToPx() }
+  var rowHeight by remember { mutableIntStateOf(0) }
+
+  // Offset icon to the center of the row
+  val targetCenterOffset = remember(rowHeight, iconBoxSize) {
+    with(density) {
+      (((rowHeight - iconBoxSize) / 2f).coerceAtLeast(0f)).toDp()
+    }
+  }
+
+  // Animate whenever the row height changes
+  val iconOffsetY by animateDpAsState(
+    targetValue = targetCenterOffset,
+    animationSpec = tween(durationMillis = 220, easing = LinearOutSlowInEasing),
+    label = "iconCenterOffset"
+  )
+
   Row(
     modifier = Modifier
       .fillMaxWidth()
-      .padding(10.dp),
+      .padding(vertical = 5.dp, horizontal = 10.dp)
+      .onSizeChanged { rowHeight = it.height },
     verticalAlignment = Alignment.CenterVertically
   ) {
     // Check icon button
     Box(
       modifier = Modifier
         .size(50.dp)
+        .offset(y = iconOffsetY)
+        .align(Alignment.Top)
         .combinedClickable(
           interactionSource = remember { MutableInteractionSource() },
           indication = null,
-          onClick = { viewModel.toggleTaskStatus(task, isLongPress = false) },
-          onLongClick = { viewModel.toggleTaskStatus(task, isLongPress = true) },
+          onClick = {
+            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+            onShortPressCheck()
+          },
+          onLongClick = {
+            haptic.performHapticFeedback(HapticFeedbackType.KeyboardTap)
+            onLongPressCheck()
+          }
         )
     ) {
       val painterRes = when (task.state) {
@@ -563,7 +724,7 @@ private fun MinimalInformation(task: Task, viewModel: HomeViewModel) {
       }
 
       Icon(
-        modifier = Modifier.size(60.dp),
+        modifier = Modifier.size(50.dp),
         painter = painterRes,
         contentDescription = null,
         tint = MaterialTheme.colorScheme.onSecondary
@@ -585,53 +746,66 @@ private fun MinimalInformation(task: Task, viewModel: HomeViewModel) {
         Text(
           text = timeString,
           style = MaterialTheme.typography.bodySmall,
-          color = textColor
+          color = MaterialTheme.colorScheme.surfaceVariant
         )
+
+        Spacer(modifier = Modifier.height(6.dp))
       }
 
       // Title
-      Text(
-        text = task.title,
-        style = MaterialTheme.typography.bodyLarge,
-        color = textColor,
-        textDecoration = titleDecoration
-      )
-    }
-
-    // Priority indicator
-    val priorityColor = when (task.priority) {
-      1 -> PriorityRed
-      2 -> PriorityOrange
-      3 -> PriorityYellow
-      else -> Color.Transparent
-    }
-
-    val painterRes = when (task.state) {
-      2 -> painterResource(R.drawable.bookmark_long)
-      else -> painterResource(R.drawable.bookmark_short)
+      if (isExpanded) {
+        Text(
+          text = task.title,
+          style = MaterialTheme.typography.bodyLarge,
+          color = textColor,
+          textDecoration = titleDecoration
+        )
+      } else {
+        Text(
+          text = task.title,
+          style = MaterialTheme.typography.bodyLarge,
+          color = textColor,
+          textDecoration = titleDecoration,
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis
+        )
+      }
     }
 
     Box(
       modifier = Modifier
-        .fillMaxHeight()
+        .align(Alignment.Top)
         .width(70.dp)
         .padding(end = 10.dp),
       contentAlignment = Alignment.TopEnd
     ) {
+      // Priority indicator
+      val priorityColor = when (task.priority) {
+        1 -> PriorityRed
+        2 -> PriorityOrange
+        3 -> PriorityYellow
+        else -> Color.Transparent
+      }
+
+      val painterRes = when (task.state) {
+        2 -> painterResource(R.drawable.bookmark_long)
+        else -> painterResource(R.drawable.bookmark_short)
+      }
+
       Icon(
         modifier = Modifier
           .size(60.dp)
-          .offset(y = (-10).dp),
+          .offset(y = (-5).dp),
         painter = painterRes,
         contentDescription = "Priorität",
         tint = priorityColor,
       )
 
       if (task.state == 3) {
+        Spacer(modifier = Modifier.height(24.dp))
+
         Text(
-          modifier = Modifier
-            .align(Alignment.BottomEnd)
-            .padding(end = 10.dp),
+          modifier = Modifier.align(Alignment.BottomCenter),
           text = "Pausiert",
           style = MaterialTheme.typography.bodySmall,
           color = MaterialTheme.colorScheme.surfaceVariant,
@@ -664,8 +838,8 @@ private fun SecondaryInformation(task: Task, onOpenEditTask: (Task) -> Unit, onS
         horizontal = 24.dp,
         vertical = 10.dp
       ),
-    thickness = 1.dp,
-    color = MaterialTheme.colorScheme.onSecondary
+    thickness = 2.dp,
+    color = MaterialTheme.colorScheme.surfaceVariant
   )
 
   Column(
@@ -838,9 +1012,27 @@ private fun buildTimeString(task: Task): String {
       timeString += " - $endTime"
     }
   } else if (task.duration != null) {
-    timeString = task.duration.toString() + " min"
+    timeString = String.format(
+      Locale.getDefault(),
+      "%02dh %02dmin",
+      task.duration / 60,
+      task.duration % 60
+    )
   }
 
   return timeString
 }
 
+@Composable
+private fun rememberMillisNow(refreshPeriod: Long = 60_000L): Long {
+  var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+
+  LaunchedEffect(refreshPeriod) {
+    while (true) {
+      now = System.currentTimeMillis()
+      delay(refreshPeriod)
+    }
+  }
+
+  return now
+}

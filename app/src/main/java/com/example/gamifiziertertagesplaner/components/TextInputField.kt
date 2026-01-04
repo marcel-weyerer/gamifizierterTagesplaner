@@ -1,6 +1,9 @@
 package com.example.gamifiziertertagesplaner.components
 
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.OutputTransformation
@@ -14,12 +17,15 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.gamifiziertertagesplaner.R
@@ -34,6 +40,7 @@ import com.example.gamifiziertertagesplaner.ui.theme.shadowElevation
  * @param placeholder    The text to display in the text field
  * @param hideInput      Whether to hide the input (for passwords)
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TextInputField(
   modifier: Modifier = Modifier,
@@ -44,6 +51,16 @@ fun TextInputField(
 ) {
   // Hide input (for passwords)
   var isHidden by remember(hideInput) { mutableStateOf(hideInput) }
+
+  val focusManager = LocalFocusManager.current
+  val imeVisible = WindowInsets.isImeVisible
+
+  // When the keyboard closes, remove focus from the field
+  LaunchedEffect(imeVisible) {
+    if (!imeVisible) {
+      focusManager.clearFocus()
+    }
+  }
 
   Surface(
     modifier = modifier,
@@ -77,13 +94,14 @@ fun TextInputField(
       } else null,
       trailingIcon = {
         if (hideInput) {
-          IconButton(onClick = { isHidden = !isHidden }) {
+          IconButton(
+            modifier = Modifier.focusProperties { canFocus = false },
+            onClick = { isHidden = !isHidden }
+          ) {
             Icon(
               painter =
-                if (isHidden)
-                  painterResource(R.drawable.eye_slash)
-                else
-                  painterResource(R.drawable.eye),
+                if (isHidden) painterResource(R.drawable.eye_slash)
+                else painterResource(R.drawable.eye),
               contentDescription = if (isHidden) "Show input" else "Hide input",
               tint = MaterialTheme.colorScheme.onSecondary
             )

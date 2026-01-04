@@ -76,14 +76,16 @@ fun PasswordContent(
         .fillMaxWidth()
         .padding(top = 24.dp),
       state = newPasswordState,
-      placeholder = "Neues Passwort"
+      placeholder = "Neues Passwort",
+      hideInput = true
     )
     TextInputField(
       modifier = Modifier
         .fillMaxWidth()
         .padding(top = 12.dp),
       state = newPasswordConfirmState,
-      placeholder = "Neues Passwort bestätigen"
+      placeholder = "Neues Passwort",
+      hideInput = true
     )
   }
 }

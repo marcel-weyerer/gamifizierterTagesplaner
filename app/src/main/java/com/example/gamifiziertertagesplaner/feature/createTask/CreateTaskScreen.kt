@@ -117,6 +117,10 @@ fun CreateTaskScreen(
     mutableStateOf(taskToEdit?.startTime != null)
   }
 
+  var isDurationSet by rememberSaveable(taskToEdit?.id) {
+    mutableStateOf(taskToEdit?.duration != null)
+  }
+
   val durationState = rememberTimePickerState(
     initialHour = (taskToEdit?.duration ?: 0) / 60,
     initialMinute = (taskToEdit?.duration ?: 0) % 60,
@@ -182,6 +186,7 @@ fun CreateTaskScreen(
       TimesInputBox(
         timePickerState = timePickerState,
         isStartTimeSet = isStartTimeSet,
+        isDurationSet = isDurationSet,
         onStartTimeSetChange = { isSet ->
           isStartTimeSet = isSet
           if (!isSet) {
@@ -189,6 +194,12 @@ fun CreateTaskScreen(
           }
         },
         durationState = durationState,
+        onDurationSetChange = { isSet ->
+          isDurationSet = isSet
+          if (!isSet) {
+            reminderState = 0
+          }
+        },
         onStartTimeChange = { newHour, newMinute ->
           timePickerState.hour = newHour
           timePickerState.minute = newMinute
@@ -234,7 +245,10 @@ fun CreateTaskScreen(
             } else {
               null
             }
-            val duration = (durationState.hour * 60 + durationState.minute).takeIf { it != 0 }
+            val duration = if (isDurationSet)
+                (durationState.hour * 60 + durationState.minute)
+              else
+                null
             val reminder = reminderState.takeIf { it != 0 }
 
             if (isEdit) {
@@ -278,7 +292,9 @@ private fun TimesInputBox(
   timePickerState: TimePickerState,
   durationState: TimePickerState,
   isStartTimeSet: Boolean,
+  isDurationSet: Boolean,
   onStartTimeSetChange: (Boolean) -> Unit,
+  onDurationSetChange: (Boolean) -> Unit,
   onStartTimeChange: (Int, Int) -> Unit,
   onDurationChange: (Int, Int) -> Unit
 ) {
@@ -293,9 +309,18 @@ private fun TimesInputBox(
       timePickerState.minute
     )
   } else {
-    "- - : - -"
+    "Startzeit"
   }
-  val durationString = "${durationState.hour * 60 + durationState.minute}  Minuten"
+  val durationString = if (isDurationSet) {
+    String.format(
+      Locale.getDefault(),
+      "%02dh %02dmin",
+      durationState.hour,
+      durationState.minute
+    )
+  } else {
+    "Dauer"
+  }
 
   Surface(
     modifier = Modifier.fillMaxWidth(),
@@ -314,7 +339,7 @@ private fun TimesInputBox(
         onClick = { showStartTimePicker = !showStartTimePicker },
         icon = Icons.Default.AccessTime,
         timeString = startTimeString,
-        isStartTimeSet = isStartTimeSet,
+        isTimeSet = isStartTimeSet,
         painterResource = painterResource(R.drawable.xmark),
         onDelete = { onStartTimeSetChange(false) }
       )
@@ -329,7 +354,10 @@ private fun TimesInputBox(
       TimeInputField(
         onClick = { showDurationPicker = !showDurationPicker },
         icon = Icons.Default.Timelapse,
-        timeString = durationString
+        timeString = durationString,
+        isTimeSet = isDurationSet,
+        painterResource = painterResource(R.drawable.xmark),
+        onDelete = { onDurationSetChange(false) }
       )
 
       if (showStartTimePicker) {
@@ -352,6 +380,7 @@ private fun TimesInputBox(
           onDismiss = { showDurationPicker = false },
           onConfirm = {
             onDurationChange(durationState.hour, durationState.minute)
+            onDurationSetChange(true)
             showDurationPicker = false
           }
         )
@@ -365,7 +394,7 @@ private fun TimeInputField(
   onClick: () -> Unit,
   icon: ImageVector,
   timeString: String,
-  isStartTimeSet: Boolean = false,
+  isTimeSet: Boolean = false,
   painterResource: Painter? = null,
   onDelete: (() -> Unit)? = null
 ) {
@@ -392,7 +421,7 @@ private fun TimeInputField(
       color = MaterialTheme.colorScheme.onSecondary
     )
 
-    if (isStartTimeSet && painterResource != null && onDelete != null) {
+    if (isTimeSet && painterResource != null && onDelete != null) {
       IconButton(
         onClick = onDelete,
         modifier = Modifier.size(24.dp)
@@ -512,7 +541,9 @@ private fun <T> ExpandableRadioPicker(
         .animateContentSize()
     ) {
       // Header row
-      Row(verticalAlignment = Alignment.Top) {
+      Row(
+        verticalAlignment = Alignment.Top
+      ) {
         Icon(
           imageVector = iconFor(value),
           contentDescription = null,

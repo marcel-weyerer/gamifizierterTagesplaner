@@ -101,6 +101,7 @@ fun App() {
       SignUpScreen(
         authViewModel = authViewModel,
         onSignedUp = {
+          homeViewModel.loadTasks()
           navController.navigate(Routes.HOME) {
             popUpTo(Routes.LOGIN) { inclusive = true }
           }
