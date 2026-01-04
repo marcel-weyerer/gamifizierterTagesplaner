@@ -1,4 +1,4 @@
-package com.example.gamifiziertertagesplaner.components
+package com.example.gamifiziertertagesplaner.feature.settings
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,6 +18,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.example.gamifiziertertagesplaner.components.ActionButton
+import com.example.gamifiziertertagesplaner.components.TextInputField
 import com.example.gamifiziertertagesplaner.notifications.DailyReminderScheduler
 
 enum class SettingsType {

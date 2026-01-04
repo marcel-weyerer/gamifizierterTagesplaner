@@ -1,4 +1,4 @@
-package com.example.gamifiziertertagesplaner.components
+package com.example.gamifiziertertagesplaner.feature.settings
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.gamifiziertertagesplaner.components.ActionButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

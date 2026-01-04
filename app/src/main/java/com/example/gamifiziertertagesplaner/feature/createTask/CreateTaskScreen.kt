@@ -2,8 +2,6 @@ package com.example.gamifiziertertagesplaner.feature.createTask
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,25 +10,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
-import com.example.gamifiziertertagesplaner.R
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.Circle
-import androidx.compose.material.icons.filled.NotificationsActive
-import androidx.compose.material.icons.filled.NotificationsOff
-import androidx.compose.material.icons.filled.Timelapse
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TimePickerState
@@ -44,29 +29,18 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.gamifiziertertagesplaner.components.ActionButton
-import com.example.gamifiziertertagesplaner.components.DialTimePicker
 import com.example.gamifiziertertagesplaner.components.SectionHeader
 import com.example.gamifiziertertagesplaner.components.TextInputField
 import com.example.gamifiziertertagesplaner.firestore.Task
-import com.example.gamifiziertertagesplaner.ui.theme.PriorityRed
-import com.example.gamifiziertertagesplaner.ui.theme.PriorityOrange
-import com.example.gamifiziertertagesplaner.ui.theme.PriorityYellow
-import com.example.gamifiziertertagesplaner.ui.theme.cornerRadius
-import com.example.gamifiziertertagesplaner.ui.theme.shadowElevation
 import com.google.firebase.Timestamp
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
-import java.util.Locale
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -287,338 +261,8 @@ fun CreateTaskScreen(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun TimesInputBox(
-  timePickerState: TimePickerState,
-  durationState: TimePickerState,
-  isStartTimeSet: Boolean,
-  isDurationSet: Boolean,
-  onStartTimeSetChange: (Boolean) -> Unit,
-  onDurationSetChange: (Boolean) -> Unit,
-  onStartTimeChange: (Int, Int) -> Unit,
-  onDurationChange: (Int, Int) -> Unit
-) {
-  var showStartTimePicker by remember { mutableStateOf(false) }
-  var showDurationPicker by remember { mutableStateOf(false) }
-
-  val startTimeString = if (isStartTimeSet) {
-    String.format(
-      Locale.getDefault(),
-      "%02d:%02d",
-      timePickerState.hour,
-      timePickerState.minute
-    )
-  } else {
-    "Startzeit"
-  }
-  val durationString = if (isDurationSet) {
-    String.format(
-      Locale.getDefault(),
-      "%02dh %02dmin",
-      durationState.hour,
-      durationState.minute
-    )
-  } else {
-    "Dauer"
-  }
-
-  Surface(
-    modifier = Modifier.fillMaxWidth(),
-    color = MaterialTheme.colorScheme.secondary,
-    shape = RoundedCornerShape(cornerRadius),
-    shadowElevation = shadowElevation
-  ) {
-    Column(
-      modifier = Modifier
-        .fillMaxSize()
-        .padding(12.dp)
-        .animateContentSize()
-    ) {
-      // Start time input
-      TimeInputField(
-        onClick = { showStartTimePicker = !showStartTimePicker },
-        icon = Icons.Default.AccessTime,
-        timeString = startTimeString,
-        isTimeSet = isStartTimeSet,
-        painterResource = painterResource(R.drawable.xmark),
-        onDelete = { onStartTimeSetChange(false) }
-      )
-
-      HorizontalDivider(
-        modifier = Modifier.fillMaxWidth(),
-        thickness = 1.dp,
-        color = MaterialTheme.colorScheme.surfaceVariant
-      )
-
-      // Duration input
-      TimeInputField(
-        onClick = { showDurationPicker = !showDurationPicker },
-        icon = Icons.Default.Timelapse,
-        timeString = durationString,
-        isTimeSet = isDurationSet,
-        painterResource = painterResource(R.drawable.xmark),
-        onDelete = { onDurationSetChange(false) }
-      )
-
-      if (showStartTimePicker) {
-        DialTimePicker(
-          timePickerState = timePickerState,
-          title = "Uhrzeit",
-          onDismiss = { showStartTimePicker = false },
-          onConfirm = {
-            onStartTimeChange(timePickerState.hour, timePickerState.minute)
-            onStartTimeSetChange(true)
-            showStartTimePicker = false
-          }
-        )
-      }
-
-      if (showDurationPicker) {
-        DialTimePicker(
-          timePickerState = durationState,
-          title = "Dauer",
-          onDismiss = { showDurationPicker = false },
-          onConfirm = {
-            onDurationChange(durationState.hour, durationState.minute)
-            onDurationSetChange(true)
-            showDurationPicker = false
-          }
-        )
-      }
-    }
-  }
-}
-
-@Composable
-private fun TimeInputField(
-  onClick: () -> Unit,
-  icon: ImageVector,
-  timeString: String,
-  isTimeSet: Boolean = false,
-  painterResource: Painter? = null,
-  onDelete: (() -> Unit)? = null
-) {
-  Row(
-    modifier = Modifier
-      .fillMaxWidth()
-      .clickable(onClick = onClick)
-      .padding(12.dp),
-    verticalAlignment = Alignment.Top
-  ) {
-    Icon(
-      imageVector = icon,
-      contentDescription = null,
-      tint = MaterialTheme.colorScheme.onSecondary,
-      modifier = Modifier.size(24.dp)
-    )
-
-    Spacer(Modifier.width(12.dp))
-
-    Text(
-      modifier = Modifier.weight(1f),
-      text = timeString,
-      style = MaterialTheme.typography.bodyMedium,
-      color = MaterialTheme.colorScheme.onSecondary
-    )
-
-    if (isTimeSet && painterResource != null && onDelete != null) {
-      IconButton(
-        onClick = onDelete,
-        modifier = Modifier.size(24.dp)
-      ) {
-        Icon(
-          painter = painterResource,
-          contentDescription = null,
-          tint = MaterialTheme.colorScheme.onSecondary
-        )
-      }
-    }
-  }
-}
-
-/**
- * Reminder Picker
- *
- * @param state          The current state of the reminder picker
- * @param onStateChange  The callback to be invoked when the state changes
- */
-@Composable
-private fun ReminderPicker(
-  modifier: Modifier,
-  state: Int,
-  onStateChange: (Int) -> Unit,
-  enabled: Boolean
-) {
-  val options = listOf(0, 5, 10, 30, 60)
-
-  ExpandableRadioPicker(
-    modifier = modifier,
-    value = state,
-    onValueChange = { if (enabled) onStateChange(it) },
-    options = options,
-    labelFor = { minutes ->
-      when (minutes) {
-        0 -> "Keine Erinnerung"
-        5 -> "5 min vorher"
-        10 -> "10 min vorher"
-        30 -> "30 min vorher"
-        60 -> "1 Std vorher"
-        else -> "$minutes min vorher"
-      }
-    },
-    iconFor = { minutes ->
-      if (minutes == 0) Icons.Default.NotificationsOff
-      else Icons.Default.NotificationsActive
-    },
-    tintFor = {
-      if (enabled)
-        MaterialTheme.colorScheme.onSecondary
-      else
-        MaterialTheme.colorScheme.surfaceVariant
-    },
-    enabled = enabled
-  )
-}
-
-@Composable
-fun PriorityPicker(
-  modifier: Modifier,
-  value: Int,
-  onValueChange: (Int) -> Unit
-) {
-  val options = listOf(1, 2, 3)
-
-  ExpandableRadioPicker(
-    modifier = modifier,
-    value = value,
-    onValueChange = onValueChange,
-    options = options,
-    labelFor = { priority ->
-      when (priority) {
-        1 -> "Hoch"
-        2 -> "Mittel"
-        3 -> "Niedrig"
-        else -> ""
-      }
-    },
-    iconFor = { priority -> Icons.Default.Circle },
-    tintFor = { priority ->
-      when (priority) {
-        1 -> PriorityRed
-        2 -> PriorityOrange
-        3 -> PriorityYellow
-        else -> MaterialTheme.colorScheme.onSecondary
-      }
-    },
-    iconOnly = true
-  )
-}
-
-@Composable
-private fun <T> ExpandableRadioPicker(
-  modifier: Modifier,
-  value: T,
-  onValueChange: (T) -> Unit,
-  options: List<T>,
-  labelFor: (T) -> String,
-  iconFor: (T) -> ImageVector,
-  tintFor: @Composable (T) -> Color,
-  iconOnly: Boolean = false,
-  enabled: Boolean = true
-) {
-  var expanded by remember { mutableStateOf(false) }
-
-  Surface(
-    modifier = modifier,
-    onClick = { expanded = !expanded },
-    color = MaterialTheme.colorScheme.secondary,
-    shape = RoundedCornerShape(cornerRadius),
-    shadowElevation = shadowElevation
-  ) {
-    Column(
-      modifier = Modifier
-        .padding(24.dp)
-        .animateContentSize()
-    ) {
-      // Header row
-      Row(
-        verticalAlignment = Alignment.Top
-      ) {
-        Icon(
-          imageVector = iconFor(value),
-          contentDescription = null,
-          tint = tintFor(value),
-          modifier = Modifier.size(24.dp)
-        )
-
-        if (!iconOnly) {
-          Spacer(Modifier.width(12.dp))
-
-          Text(
-            text = labelFor(value),
-            style = MaterialTheme.typography.bodyMedium,
-            color = tintFor(value)
-          )
-        }
-      }
-
-      // Options
-      if (expanded && enabled) {
-        Column {
-          HorizontalDivider(
-            modifier = Modifier
-              .padding(top = 24.dp, bottom = 12.dp),
-            thickness = 1.dp,
-            color = MaterialTheme.colorScheme.onSecondary
-          )
-
-          options.forEach { option ->
-            PickerOptionRow(
-              text = labelFor(option),
-              selected = option == value,
-              onClick = {
-                onValueChange(option)
-                expanded = false
-              }
-            )
-          }
-        }
-      }
-    }
-  }
-}
-
-@Composable
-private fun PickerOptionRow(
-  text: String,
-  selected: Boolean,
-  onClick: () -> Unit
-) {
-  Row(
-    modifier = Modifier
-      .fillMaxWidth()
-      .padding(top = 12.dp)
-      .clickable(onClick = onClick),
-    verticalAlignment = Alignment.CenterVertically
-  ) {
-    RadioButton(
-      selected = selected,
-      onClick = onClick
-    )
-
-    Spacer(Modifier.width(12.dp))
-
-    Text(
-      text = text,
-      style = MaterialTheme.typography.bodyMedium,
-      color = MaterialTheme.colorScheme.onSecondary
-    )
-  }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
-fun createTimeStamp(timePickerState: TimePickerState): Timestamp {
+private fun createTimeStamp(timePickerState: TimePickerState): Timestamp {
   val today = LocalDate.now()
   val localDateTime = LocalDateTime.of(
     today,
