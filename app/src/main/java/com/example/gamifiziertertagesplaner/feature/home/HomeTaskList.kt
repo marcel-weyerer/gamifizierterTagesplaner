@@ -107,14 +107,16 @@ fun TaskList(
             val (doneTasks, activeTasksAll) = sortedTasks.partition { it.state == 0 }
 
             val millisNow = rememberMillisNow()   // current time in millis
-            val millisToStart = 10 * 60_000L      // 10 minutes before start
+            val highlightPeriod = 10 * 60_000L      // 10 minutes in milliseconds
 
             // Move tasks that start soon to the top
             // Split active tasks into starting soon and active tasks
             val (startingSoonTasks, activeTasks) = activeTasksAll.partition { task ->
               val start = task.startTime ?: return@partition false
               val startMillis = start.seconds * 1000L + start.nanoseconds / 1_000_000L
-              millisNow >= (startMillis - millisToStart)
+
+              // include tasks that start in the next 10 minutes and keep them for 10 minutes after the start time
+              millisNow >= (startMillis - highlightPeriod) && millisNow <= (startMillis + highlightPeriod)
             }
 
             // Sort starting soon tasks by priority and then by starting time

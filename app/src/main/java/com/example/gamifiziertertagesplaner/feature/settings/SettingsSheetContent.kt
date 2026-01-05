@@ -22,21 +22,6 @@ import com.example.gamifiziertertagesplaner.components.ActionButton
 import com.example.gamifiziertertagesplaner.components.TextInputField
 import com.example.gamifiziertertagesplaner.notifications.DailyReminderScheduler
 
-enum class SettingsType {
-  USERNAME,
-  PROFILE_PICTURE,
-  PASSWORD,
-  EMAIL,
-  NOTIFICATION,
-  ENDOFDAY
-}
-
-data class SettingsContent(
-  val title: String,
-  val description: String,
-  val content: @Composable () -> Unit
-)
-
 @Composable
 fun UsernameContent(
   state: TextFieldState
