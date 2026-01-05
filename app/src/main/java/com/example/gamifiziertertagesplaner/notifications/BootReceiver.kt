@@ -17,6 +17,8 @@ class BootReceiver : BroadcastReceiver() {
     if (enabled) {
       DailyReminderScheduler.scheduleNextExact(context, minutes)
     }
+
+    TaskStartScheduler.rescheduleAllFromPrefs(context)
   }
 }
 

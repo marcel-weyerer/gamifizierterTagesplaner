@@ -18,7 +18,7 @@ class DailyReminderReceiver : BroadcastReceiver() {
 
     showDailyReminderNotification(context)
 
-    // schedule tomorrow (exact) after firing
+    // schedule tomorrow after firing
     val (enabled, minutes) = DailyReminderScheduler.readSavedConfig(context)
     if (enabled) {
       DailyReminderScheduler.scheduleNextExact(context, minutes)

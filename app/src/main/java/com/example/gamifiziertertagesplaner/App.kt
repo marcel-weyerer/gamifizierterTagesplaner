@@ -130,6 +130,7 @@ fun App() {
     composable(Routes.CREATE_TASK) {  // Create Task Screen
       CreateTaskScreen(
         onCancel = {
+          homeViewModel.loadTasks()
           navController.navigate(Routes.HOME) {
             popUpTo(Routes.HOME) { inclusive = true }
           }
@@ -141,6 +142,7 @@ fun App() {
       CreateTaskScreen(
         taskToEdit = taskToEdit,
         onCancel = {
+          homeViewModel.loadTasks()
           navController.navigate(Routes.HOME) {
             popUpTo(Routes.HOME) { inclusive = true }
           }

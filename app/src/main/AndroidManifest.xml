@@ -16,10 +16,6 @@
         android:theme="@style/Theme.GamifizierterTagesplaner">
 
         <receiver
-            android:name=".notifications.DailyReminderReceiver"
-            android:exported="false" />
-
-        <receiver
             android:name=".notifications.BootReceiver"
             android:exported="false">
             <intent-filter>
@@ -27,6 +23,15 @@
                 <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+
+        <receiver
+            android:name=".notifications.TaskStartReceiver"
+            android:exported="false" />
+
+        <receiver
+            android:name=".notifications.DailyReminderReceiver"
+            android:exported="false" />
+
 
         <activity
             android:name=".MainActivity"

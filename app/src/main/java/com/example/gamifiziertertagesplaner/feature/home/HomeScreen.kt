@@ -73,6 +73,8 @@ private fun HomeScreenContent(
   onOpenBookshelf: () -> Unit,
   onOpenSettings: () -> Unit
 ) {
+  viewModel.loadTasks()
+
   val tasks by viewModel.tasks.collectAsState()     // List of all tasks
   val hasTasks = tasks.isNotEmpty()     // Flag if there are tasks
   val circleOffsetY by animateDpAsState(

@@ -1,9 +1,11 @@
 package com.example.gamifiziertertagesplaner.feature.home
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gamifiziertertagesplaner.firestore.Task
 import com.example.gamifiziertertagesplaner.firestore.TaskRepository
+import com.example.gamifiziertertagesplaner.notifications.TaskNotificationSyncer
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -13,9 +15,11 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
-class HomeViewModel (
+class HomeViewModel(app: Application) : AndroidViewModel(app) {
+
+  private val appContext = app.applicationContext
   private val repository: TaskRepository = TaskRepository()
-) : ViewModel() {
+
   // Get current date
   private val today = Calendar.getInstance().time
   val yearText: String = SimpleDateFormat("yyyy", Locale.getDefault()).format(today)
@@ -47,6 +51,10 @@ class HomeViewModel (
         .collect { list ->
           _tasks.value = list
           recalculatePoints()
+
+          // Schedule notifications for all tasks
+          TaskNotificationSyncer.syncAll(appContext, list)
+
           _isLoading.value = false
         }
     }
@@ -61,6 +69,9 @@ class HomeViewModel (
         _tasks.value = result
 
         recalculatePoints()
+
+        // Schedule notifications for all tasks
+        TaskNotificationSyncer.syncAll(appContext, result)
       } catch (e: Exception) {
         _errorMessage.value = e.message
       } finally {
@@ -88,6 +99,9 @@ class HomeViewModel (
 
       recalculatePoints()
 
+      // Update notifications to not notify on done tasks
+      TaskNotificationSyncer.syncOne(appContext, updated)
+
       // Update backend so there is no reload on the UI
       try {
         repository.updateTask(updated)
@@ -105,10 +119,14 @@ class HomeViewModel (
 
   fun deleteTask(taskId: String) {
     viewModelScope.launch {
+      val removed = _tasks.value.firstOrNull { it.id == taskId }
       // Update UI list locally
       _tasks.value = _tasks.value.filterNot { it.id == taskId }
 
       recalculatePoints()
+
+      // Don't notify on deleted tasks
+      if (removed != null) TaskNotificationSyncer.cancel(appContext, removed)
 
       // Update backend so there is no reload on the UI
       try {
