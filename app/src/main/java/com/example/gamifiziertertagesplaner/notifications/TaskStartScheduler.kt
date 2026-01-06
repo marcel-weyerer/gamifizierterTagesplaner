@@ -69,13 +69,12 @@ object TaskStartScheduler {
       return
     }
 
-    // persist / upsert
     upsertLocal(context, taskId, triggerAtMillis, title, text)
 
     val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
     val pendingIntent = buildPendingIntent(context, taskId, title, text)
 
-    // Cancel old one first (important when time/title changed)
+    // Cancel old alarm first
     alarmManager.cancel(pendingIntent)
 
     scheduleExact(alarmManager, triggerAtMillis, pendingIntent)
@@ -89,9 +88,6 @@ object TaskStartScheduler {
     alarmManager.cancel(pendingIntent)
   }
 
-  /**
-   * Call this after BOOT_COMPLETED to restore alarms.
-   */
   fun rescheduleAllFromPrefs(context: Context) {
     val now = System.currentTimeMillis()
     val entries = getAllLocal(context)
@@ -118,7 +114,7 @@ object TaskStartScheduler {
     removeLocal(context, taskId)
   }
 
-  // ---------------- internals ----------------
+  // Helper functions
 
   private fun buildPendingIntent(
     context: Context,

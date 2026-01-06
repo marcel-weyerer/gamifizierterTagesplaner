@@ -50,6 +50,9 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.Date
 
+/**
+ * Settings screen
+ */
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,10 +63,12 @@ fun SettingsScreen(
   onOpenBookshelf: () -> Unit,
   onLoggedOut: () -> Unit
 ) {
+  // Bottom sheet state
   val sheetState = rememberModalBottomSheetState()
   val scope = rememberCoroutineScope()
   val context = LocalContext.current
 
+  // Current settings type
   var currentType by remember { mutableStateOf<SettingsType?>(null) }
 
   // Input states for all profile properties
@@ -79,7 +84,7 @@ fun SettingsScreen(
   // Timestamp from Firestore
   val initialEndOfDayTimestamp = authViewModel.userProfile?.endOfDayTime
 
-  // Derive initial hour + minute for the picker
+  // Derive initial hour and minute for the picker
   val (initialHour, initialMinute) = remember(initialEndOfDayTimestamp) {
     if (initialEndOfDayTimestamp != null) {
       val localTime = initialEndOfDayTimestamp.toDate()
@@ -106,59 +111,15 @@ fun SettingsScreen(
 
   // Notification states
   val initialReminderMinutes = authViewModel.userProfile?.createListReminderMinutes ?: (10 * 60) // default 10:00
-
-
   var selectedReminderMinutes by remember { mutableIntStateOf(initialReminderMinutes) }
   var showReminderTimePicker by remember { mutableStateOf(false) }
-
   val reminderTimePickerState = rememberTimePickerState(
     initialHour = initialReminderMinutes / 60,
     initialMinute = initialReminderMinutes % 60,
     is24Hour = true
   )
 
-  fun openSheet(type: SettingsType) {
-    currentType = type
-
-    // Prefill fields when opening
-    when (type) {
-      SettingsType.USERNAME -> {
-        val currentName = authViewModel.userProfile?.username.orEmpty()
-        usernameState.edit {
-          replace(0, length, currentName)
-        }
-      }
-
-      SettingsType.EMAIL -> {
-        val currentEmail = authViewModel.userProfile?.email.orEmpty()
-        newEmailState.edit {
-          replace(0, length, currentEmail)
-        }
-        newEmailConfirmState.edit {
-          replace(0, length, currentEmail)
-        }
-      }
-
-      SettingsType.PASSWORD -> {
-        // Don't show password
-        newPasswordState.edit { replace(0, length, "") }
-        newPasswordConfirmState.edit { replace(0, length, "") }
-      }
-
-      else -> Unit
-    }
-
-    scope.launch { sheetState.show() }
-  }
-
-  fun closeSheet() {
-    scope.launch {
-      sheetState.hide()
-    }.invokeOnCompletion {
-      currentType = null
-    }
-  }
-
+  // Map of content values for each setting type
   val settingsContentMap: Map<SettingsType, SettingsContent> = remember {
     mapOf(
       SettingsType.USERNAME to SettingsContent(
@@ -216,6 +177,50 @@ fun SettingsScreen(
     )
   }
 
+  // Opens bottom sheet that contains the input fields to change a setting
+  fun openSheet(type: SettingsType) {
+    currentType = type
+
+    // Prefill fields when opening
+    when (type) {
+      SettingsType.USERNAME -> {
+        val currentName = authViewModel.userProfile?.username.orEmpty()
+        usernameState.edit {
+          replace(0, length, currentName)
+        }
+      }
+
+      SettingsType.EMAIL -> {
+        val currentEmail = authViewModel.userProfile?.email.orEmpty()
+        newEmailState.edit {
+          replace(0, length, currentEmail)
+        }
+        newEmailConfirmState.edit {
+          replace(0, length, currentEmail)
+        }
+      }
+
+      SettingsType.PASSWORD -> {
+        // Don't show password
+        newPasswordState.edit { replace(0, length, "") }
+        newPasswordConfirmState.edit { replace(0, length, "") }
+      }
+
+      else -> Unit
+    }
+
+    scope.launch { sheetState.show() }
+  }
+
+  // Closes the bottom sheet
+  fun closeSheet() {
+    scope.launch {
+      sheetState.hide()
+    }.invokeOnCompletion {
+      currentType = null
+    }
+  }
+
   Scaffold(
     bottomBar = {
       CustomBottomAppBar(
@@ -257,6 +262,7 @@ fun SettingsScreen(
 
       TopScreenTitle(title = "Einstellungen")
 
+      // Settings section
       Column(
         modifier = Modifier
           .fillMaxSize()
@@ -264,8 +270,7 @@ fun SettingsScreen(
           .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally
       ) {
-        val username = authViewModel.userProfile?.username ?: "User"
-
+        // Change profile picture
         IconButton(
           onClick = { openSheet(SettingsType.PROFILE_PICTURE) },
           modifier = Modifier.size(150.dp)
@@ -278,6 +283,8 @@ fun SettingsScreen(
             )
         }
 
+        // User name
+        val username = authViewModel.userProfile?.username ?: "User"
         Text(
           modifier = Modifier.padding(vertical = 12.dp),
           text = username,
@@ -287,6 +294,7 @@ fun SettingsScreen(
 
         SectionHeader("Nutzer Profil")
 
+        // Change user name button
         ActionButton(
           onClick = { openSheet(SettingsType.USERNAME) },
           modifier = Modifier
@@ -295,6 +303,7 @@ fun SettingsScreen(
           text = "Nutzername ändern"
         )
 
+        // Change password button
         ActionButton(
           onClick = { openSheet(SettingsType.PASSWORD) },
           modifier = Modifier
@@ -303,6 +312,7 @@ fun SettingsScreen(
           text = "Passwort ändern"
         )
 
+        // Change e-mail button
         ActionButton(
           onClick = { openSheet(SettingsType.EMAIL) },
           modifier = Modifier
@@ -312,6 +322,7 @@ fun SettingsScreen(
 
         SectionHeader("Tagesabschluss")
 
+        // Change end of day time button
         ActionButton(
           onClick = { openSheet(SettingsType.ENDOFDAY) },
           modifier = Modifier.fillMaxWidth(),
@@ -350,6 +361,7 @@ fun SettingsScreen(
 
         SectionHeader("Benachrichtigung")
 
+        // Change notifications button
         ActionButton(
           onClick = { openSheet(SettingsType.NOTIFICATION) },
           modifier = Modifier.fillMaxWidth(),
@@ -372,6 +384,7 @@ fun SettingsScreen(
           )
         }
 
+        // Logout button
         TextButton(
           onClick = { authViewModel.logout(onLoggedOut) },
           modifier = Modifier.padding(vertical = 24.dp)
@@ -387,6 +400,7 @@ fun SettingsScreen(
         currentType?.let { settingsType ->
           val type = settingsContentMap.getValue(settingsType)
 
+          // Choose content of bottom sheet depending on settings type
           BottomSheet(
             sheetState = sheetState,
             onSave = {

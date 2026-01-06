@@ -42,6 +42,9 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 
+/**
+ * Create Task Screen
+ */
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,8 +53,9 @@ fun CreateTaskScreen(
   onCancel: () -> Unit,
   taskToEdit: Task? = null
 ) {
-  val isEdit = taskToEdit != null   // Should a new task be created or an existing one be edited
   val scrollState = rememberScrollState()
+
+  val isEdit = taskToEdit != null     // Determines if a new task should be created or an existiing one should be edited
 
   // Text field states
   val titleState = remember(taskToEdit?.id) {
@@ -65,7 +69,6 @@ fun CreateTaskScreen(
   val priorityState = rememberSaveable(taskToEdit?.id) {
     mutableIntStateOf(taskToEdit?.priority ?: 2)
   }
-
 
   // Time and reminder states
   val initialStartLocalTime = remember(taskToEdit?.id) {
@@ -105,7 +108,7 @@ fun CreateTaskScreen(
     mutableIntStateOf(taskToEdit?.reminder ?: 0)
   }
 
-  Surface(    // background
+  Surface(      // Background
     modifier = Modifier.fillMaxSize(),
     color = MaterialTheme.colorScheme.background
   ) {
@@ -125,11 +128,11 @@ fun CreateTaskScreen(
         color = MaterialTheme.colorScheme.surfaceVariant
       )
 
-      // Task title input
       SectionHeader("Titel + Priorität")
       Row(
         modifier = Modifier.fillMaxWidth()
       ) {
+        // Task title input
         TextInputField(
           modifier = Modifier.weight(1f),
           state = titleState,
@@ -139,6 +142,7 @@ fun CreateTaskScreen(
 
         Spacer(modifier = Modifier.width(12.dp))
 
+        // Task priority input
         PriorityPicker(
           modifier = Modifier.align(Alignment.CenterVertically),
           value = priorityState.intValue,
@@ -184,7 +188,7 @@ fun CreateTaskScreen(
         }
       )
 
-      // Task reminder input
+      // Task reminder input which can only be picked when a start time has been set
       SectionHeader("Erinnerung")
       ReminderPicker(
         modifier = Modifier.fillMaxWidth(),
@@ -226,7 +230,7 @@ fun CreateTaskScreen(
             val reminder = reminderState.takeIf { it != 0 }
 
             if (isEdit) {
-              // UPDATE existing task
+              // Update task if edit mode is active
               viewModel.updateTask(
                 id = taskToEdit.id,
                 title = title,
@@ -238,7 +242,7 @@ fun CreateTaskScreen(
                 state = taskToEdit.state
               )
             } else {
-              // CREATE new task
+              // Create new task
               viewModel.addTask(
                 title = title,
                 priority = priorityState.intValue,
@@ -260,6 +264,9 @@ fun CreateTaskScreen(
   }
 }
 
+/**
+ * Creates a time stamp from a time picker state
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 private fun createTimeStamp(timePickerState: TimePickerState): Timestamp {

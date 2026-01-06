@@ -108,7 +108,7 @@ object TaskReminderScheduler {
     return getAllLocal(context).map { it.taskId }.toSet()
   }
 
-  // ---- internals ----
+  // Helper functions
 
   private fun buildPendingIntent(context: Context, taskId: String, title: String, text: String): PendingIntent {
     val intent = Intent(context, TaskReminderReceiver::class.java).apply {

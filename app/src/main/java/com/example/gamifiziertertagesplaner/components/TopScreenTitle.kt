@@ -16,6 +16,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.gamifiziertertagesplaner.ui.theme.MediumBrown
 
+/**
+ * Reusable top screen title
+ *
+ * @param title  The title to display
+ */
 @Composable
 fun TopScreenTitle(title: String) {
   Box(
@@ -26,7 +31,7 @@ fun TopScreenTitle(title: String) {
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val radius = screenHeight / 2f
 
-    // Circle background
+    // Draw circle for background and add screen title in front
     Box(
       modifier = Modifier
         .fillMaxSize()

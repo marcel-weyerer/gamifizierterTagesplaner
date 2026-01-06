@@ -12,25 +12,24 @@ import java.util.Calendar
 object DailyReminderScheduler {
 
   private const val REQUEST_CODE = 42
-  private const val ACTION_DAILY_REMINDER =
-    "com.example.gamifiziertertagesplaner.DAILY_REMINDER"
+  private const val ACTION_DAILY_REMINDER = "com.example.gamifiziertertagesplaner.DAILY_REMINDER"
 
   private const val PREFS = "daily_reminder_prefs"
   private const val KEY_ENABLED = "enabled"
   private const val KEY_MINUTES = "minutesSinceMidnight"
 
   fun scheduleDailyReminder(context: Context, minutesSinceMidnight: Int) {
-    // persist so BootReceiver + Receiver can re-schedule correctly
+    // Persist so BootReceiver and Receiver can reschedule correctly
     context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit {
       putBoolean(KEY_ENABLED, true)
       putInt(KEY_MINUTES, minutesSinceMidnight)
     }
 
-    // schedule first/next occurrence
+    // Schedule next occurrence
     scheduleNextExact(context, minutesSinceMidnight)
   }
 
-  /** schedules the next occurrence (today or tomorrow) as an exact alarm */
+  // Schedules the next occurrence
   fun scheduleNextExact(context: Context, minutesSinceMidnight: Int) {
     val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
@@ -54,7 +53,7 @@ object DailyReminderScheduler {
       if (before(now)) add(Calendar.DAY_OF_YEAR, 1)
     }
 
-    // cancel any previous scheduled one-shot alarm
+    // Cancel any previous scheduled alarm
     alarmManager.cancel(pendingIntent)
 
     scheduleExact(alarmManager, triggerTime.timeInMillis, pendingIntent)
@@ -67,7 +66,7 @@ object DailyReminderScheduler {
   ) {
     try {
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
-        // fallback (still works but can be delayed)
+        // Fallback
         alarmManager.setAndAllowWhileIdle(
           AlarmManager.RTC_WAKEUP,
           triggerAtMillis,
@@ -111,6 +110,7 @@ object DailyReminderScheduler {
     alarmManager.cancel(pendingIntent)
   }
 
+  // Helper function to read saved config
   fun readSavedConfig(context: Context): Pair<Boolean, Int> {
     val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
     return prefs.getBoolean(KEY_ENABLED, false) to prefs.getInt(KEY_MINUTES, 18 * 60)

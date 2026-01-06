@@ -29,7 +29,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -57,9 +56,11 @@ fun TimesInputBox(
   onStartTimeChange: (Int, Int) -> Unit,
   onDurationChange: (Int, Int) -> Unit
 ) {
+  // Time picker states
   var showStartTimePicker by remember { mutableStateOf(false) }
   var showDurationPicker by remember { mutableStateOf(false) }
 
+  // Start time text
   val startTimeString = if (isStartTimeSet) {
     String.format(
       Locale.getDefault(),
@@ -70,6 +71,8 @@ fun TimesInputBox(
   } else {
     "Startzeit"
   }
+
+  // Duration text
   val durationString = if (isDurationSet) {
     String.format(
       Locale.getDefault(),
@@ -99,7 +102,6 @@ fun TimesInputBox(
         icon = Icons.Default.AccessTime,
         timeString = startTimeString,
         isTimeSet = isStartTimeSet,
-        painterResource = painterResource(R.drawable.xmark),
         onDelete = { onStartTimeSetChange(false) }
       )
 
@@ -115,10 +117,10 @@ fun TimesInputBox(
         icon = Icons.Default.Timelapse,
         timeString = durationString,
         isTimeSet = isDurationSet,
-        painterResource = painterResource(R.drawable.xmark),
         onDelete = { onDurationSetChange(false) }
       )
 
+      // Show time picker dialog when clicked
       if (showStartTimePicker) {
         DialTimePicker(
           timePickerState = timePickerState,
@@ -132,6 +134,7 @@ fun TimesInputBox(
         )
       }
 
+      // Show time picker dialog when clicked
       if (showDurationPicker) {
         DialTimePicker(
           timePickerState = durationState,
@@ -159,7 +162,6 @@ private fun TimeInputField(
   icon: ImageVector,
   timeString: String,
   isTimeSet: Boolean = false,
-  painterResource: Painter? = null,
   onDelete: (() -> Unit)? = null
 ) {
   Row(
@@ -185,13 +187,14 @@ private fun TimeInputField(
       color = MaterialTheme.colorScheme.onSecondary
     )
 
-    if (isTimeSet && painterResource != null && onDelete != null) {
+    // When a time has been picked show a delete button for easy reset
+    if (isTimeSet && onDelete != null) {
       IconButton(
         onClick = onDelete,
         modifier = Modifier.size(24.dp)
       ) {
         Icon(
-          painter = painterResource,
+          painter = painterResource(R.drawable.xmark),
           contentDescription = null,
           tint = MaterialTheme.colorScheme.onSecondary
         )

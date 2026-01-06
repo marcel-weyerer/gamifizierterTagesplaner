@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 /**
- * Header for a section of the screen
+ * Reusable header for a section of the screen
  *
  * @param text  The text to display in the header
  */

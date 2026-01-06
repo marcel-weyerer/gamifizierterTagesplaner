@@ -11,9 +11,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.unit.dp
 
+/**
+ * Loading screen composable.
+ */
 @Composable
 fun LoadingScreen() {
-  Surface(    // background
+  Surface(      // Background
     modifier = Modifier.fillMaxSize(),
     color = MaterialTheme.colorScheme.background
   ) {

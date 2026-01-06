@@ -59,7 +59,7 @@ fun TaskList(
     modifier = Modifier
       .fillMaxSize()
   ) {
-    val spacerHeight = maxHeight / 2 + circleOffsetY
+    val spacerHeight = maxHeight / 2 + circleOffsetY    // Top bar height
 
     Column(
       modifier = Modifier
@@ -71,6 +71,7 @@ fun TaskList(
 
       val totalPoints by viewModel.totalPoints.collectAsState()
       val receivedPoints by viewModel.receivedPoints.collectAsState()
+
       // Progress bar
       if (hasTasks) {
         TaskProgressBar(
@@ -106,7 +107,7 @@ fun TaskList(
             // Split tasks into active and finished tasks
             val (doneTasks, activeTasksAll) = sortedTasks.partition { it.state == 0 }
 
-            val millisNow = rememberMillisNow()   // current time in millis
+            val millisNow = rememberMillisNow()     // current time in millis
             val highlightPeriod = 10 * 60_000L      // 10 minutes in milliseconds
 
             // Move tasks that start soon to the top
@@ -148,7 +149,7 @@ fun TaskList(
                 priority to groupTasks
             }
 
-
+            // List of task components
             LazyColumn(
               modifier = Modifier
                 .fillMaxSize()
@@ -214,6 +215,9 @@ fun TaskList(
   }
 }
 
+/**
+ * Current time in millis
+ */
 @Composable
 private fun rememberMillisNow(refreshPeriod: Long = 60_000L): Long {
   var now by remember { mutableLongStateOf(System.currentTimeMillis()) }

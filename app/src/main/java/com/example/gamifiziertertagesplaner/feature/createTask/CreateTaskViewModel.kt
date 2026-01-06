@@ -14,7 +14,15 @@ class CreateTaskViewModel (
 ) : ViewModel() {
   private val _errorMessage = MutableStateFlow<String?>(null)
 
-  fun addTask(title: String, priority: Int, description: String? = null, startTime: Timestamp? = null, duration: Int? = null, reminder: Int? = null) {
+  // Create a new task
+  fun addTask(
+    title: String,
+    priority: Int,
+    description: String? = null,
+    startTime: Timestamp? = null,
+    duration: Int? = null,
+    reminder: Int? = null
+  ) {
     val newTask = Task(
       title = title.trim(),
       priority = priority,
@@ -26,6 +34,7 @@ class CreateTaskViewModel (
       points = calculatePoints(priority, duration ?: 1)
     )
 
+    // Start a coroutine to add the task
     viewModelScope.launch {
       try {
         repository.addTask(newTask)
@@ -35,7 +44,17 @@ class CreateTaskViewModel (
     }
   }
 
-  fun updateTask(id: String, title: String, priority: Int, description: String? = null, startTime: Timestamp? = null, duration: Int? = null, reminder: Int? = null, state: Int) {
+  // Update an existing task
+  fun updateTask(
+    id: String,
+    title: String,
+    priority: Int,
+    description: String? = null,
+    startTime: Timestamp? = null,
+    duration: Int? = null,
+    reminder: Int? = null,
+    state: Int
+  ) {
     val newTask = Task(
       id = id,
       title = title.trim(),
@@ -48,6 +67,7 @@ class CreateTaskViewModel (
       points = calculatePoints(priority, duration ?: 1)
     )
 
+    // Start a coroutine to update the task
     viewModelScope.launch {
       try {
         repository.updateTask(newTask)
@@ -57,6 +77,7 @@ class CreateTaskViewModel (
     }
   }
 
+  // Calculate task points based on priority and duration
   private fun calculatePoints(priority: Int, durationMinutes: Int): Int {
     val priorityFactor = when (priority) {
       1 -> 10     // High

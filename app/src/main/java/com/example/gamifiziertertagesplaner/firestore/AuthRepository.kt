@@ -13,6 +13,7 @@ class AuthRepository(
   private val storage: FirebaseStorage = FirebaseStorage.getInstance()
 ) {
 
+  // Register new user
   suspend fun registerUser(
     email: String,
     password: String,
@@ -60,7 +61,7 @@ class AuthRepository(
     }
   }
 
-
+  // Login existing user
   suspend fun loginUser(
     email: String,
     password: String
@@ -85,8 +86,10 @@ class AuthRepository(
     }
   }
 
+  // Get current user
   fun currentUser(): FirebaseUser? = auth.currentUser
 
+  // Load profile of current user
   suspend fun loadCurrentUserProfile(): UserProfile? {
     val uid = auth.currentUser?.uid ?: return null
 
@@ -102,10 +105,13 @@ class AuthRepository(
     }
   }
 
+  // Logout user
   fun logout() {
     auth.signOut()
   }
 
+  // Update functions
+  // Update user name
   suspend fun updateUsername(newUsername: String): Result<UserProfile> {
     val uid = auth.currentUser?.uid ?: return Result.failure(Exception("No UID"))
 
@@ -133,7 +139,7 @@ class AuthRepository(
     }
   }
 
-  // Email
+  // Update e-mail
   suspend fun updateEmail(newEmail: String): Result<Unit> {
     val user = auth.currentUser ?: return Result.failure(Exception("No logged-in user"))
 
@@ -145,7 +151,7 @@ class AuthRepository(
     }
   }
 
-  // Password
+  // Update password
   suspend fun updatePassword(newPassword: String): Result<Unit> {
     val user = auth.currentUser ?: return Result.failure(Exception("No logged-in user"))
 
@@ -157,6 +163,82 @@ class AuthRepository(
     }
   }
 
+  // Update create list reminder
+  suspend fun updateCreateListReminder(minutes: Int?): Result<UserProfile> {
+    val uid = auth.currentUser?.uid ?: return Result.failure(Exception("No logged-in user"))
+
+    return try {
+      firestore.collection("users").document(uid)
+        .update("createListReminderMinutes", minutes)
+        .await()
+
+      val snapshot = firestore.collection("users")
+        .document(uid)
+        .get()
+        .await()
+
+      val updatedProfile = snapshot.toObject(UserProfile::class.java)
+      if (updatedProfile != null) {
+        Result.success(updatedProfile)
+      } else {
+        Result.failure(Exception("User profile not found after update"))
+      }
+    } catch (e: Exception) {
+      Result.failure(e)
+    }
+  }
+
+  // Update end of day time
+  suspend fun updateEndOfDay(timestamp: Timestamp?): Result<UserProfile> {
+    val uid = auth.currentUser?.uid ?: return Result.failure(Exception("No logged-in user"))
+
+    return try {
+      firestore.collection("users").document(uid)
+        .update("endOfDayTime", timestamp)
+        .await()
+
+      val snapshot = firestore.collection("users")
+        .document(uid)
+        .get()
+        .await()
+
+      val updatedProfile = snapshot.toObject(UserProfile::class.java)
+      if (updatedProfile != null) {
+        Result.success(updatedProfile)
+      } else {
+        Result.failure(Exception("User profile not found after update"))
+      }
+    } catch (e: Exception) {
+      Result.failure(e)
+    }
+  }
+
+  // Update user points
+  suspend fun updateUserPoints(points: Int): Result<UserProfile> {
+    val uid = auth.currentUser?.uid ?: return Result.failure(Exception("No logged-in user"))
+
+    return try {
+      firestore.collection("users").document(uid)
+        .update("userPoints", points)
+        .await()
+
+      val snapshot = firestore.collection("users")
+        .document(uid)
+        .get()
+        .await()
+
+      val updatedProfile = snapshot.toObject(UserProfile::class.java)
+      if (updatedProfile != null) {
+        Result.success(updatedProfile)
+      } else {
+        Result.failure(Exception("User profile not found after update"))
+      }
+    } catch (e: Exception) {
+      Result.failure(e)
+    }
+  }
+
+  // Buy a shop item function
   suspend fun buyShopItems(
     totalPrice: Int,
     bookAmount: Int,
@@ -200,78 +282,6 @@ class AuthRepository(
 
       Result.success(updatedProfile)
 
-    } catch (e: Exception) {
-      Result.failure(e)
-    }
-  }
-
-  suspend fun updateCreateListReminder(minutes: Int?): Result<UserProfile> {
-    val uid = auth.currentUser?.uid ?: return Result.failure(Exception("No logged-in user"))
-
-    return try {
-      firestore.collection("users").document(uid)
-        .update("createListReminderMinutes", minutes)
-        .await()
-
-      val snapshot = firestore.collection("users")
-        .document(uid)
-        .get()
-        .await()
-
-      val updatedProfile = snapshot.toObject(UserProfile::class.java)
-      if (updatedProfile != null) {
-        Result.success(updatedProfile)
-      } else {
-        Result.failure(Exception("User profile not found after update"))
-      }
-    } catch (e: Exception) {
-      Result.failure(e)
-    }
-  }
-
-  suspend fun updateEndOfDay(timestamp: Timestamp?): Result<UserProfile> {
-    val uid = auth.currentUser?.uid ?: return Result.failure(Exception("No logged-in user"))
-
-    return try {
-      firestore.collection("users").document(uid)
-        .update("endOfDayTime", timestamp)
-        .await()
-
-      val snapshot = firestore.collection("users")
-        .document(uid)
-        .get()
-        .await()
-
-      val updatedProfile = snapshot.toObject(UserProfile::class.java)
-      if (updatedProfile != null) {
-        Result.success(updatedProfile)
-      } else {
-        Result.failure(Exception("User profile not found after update"))
-      }
-    } catch (e: Exception) {
-      Result.failure(e)
-    }
-  }
-
-  suspend fun updateUserPoints(points: Int): Result<UserProfile> {
-    val uid = auth.currentUser?.uid ?: return Result.failure(Exception("No logged-in user"))
-
-    return try {
-      firestore.collection("users").document(uid)
-        .update("userPoints", points)
-        .await()
-
-      val snapshot = firestore.collection("users")
-        .document(uid)
-        .get()
-        .await()
-
-      val updatedProfile = snapshot.toObject(UserProfile::class.java)
-      if (updatedProfile != null) {
-        Result.success(updatedProfile)
-      } else {
-        Result.failure(Exception("User profile not found after update"))
-      }
     } catch (e: Exception) {
       Result.failure(e)
     }

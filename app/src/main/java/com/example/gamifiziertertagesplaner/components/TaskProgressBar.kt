@@ -17,17 +17,20 @@ import com.example.gamifiziertertagesplaner.ui.theme.shadowElevation
 
 /**
  * Custom composable for the progress bar.
- * It shows the progress of the finished task by using the reveived points and the total points.
+ * It shows the progress of the finished task by using the received points and the total points.
  *
- * @param receivedPoints  Number of received points from finished tasks.
- * @param totalPoints     Total number of points from all tasks of the day.
+ * @param receivedPoints    Number of received points from finished tasks.
+ * @param totalPoints       Total number of points from all tasks of the day.
  */
 @Composable
 fun TaskProgressBar(
   receivedPoints: Int,
   totalPoints: Int
 ) {
-  val targetProgress = if (totalPoints > 0) (receivedPoints.toFloat() / totalPoints) else 0f
+  val targetProgress = if (totalPoints > 0)
+      (receivedPoints.toFloat() / totalPoints)
+  else
+    0f
 
   // Smooth animation between values
   val animatedProgress by animateFloatAsState(targetValue = targetProgress)

@@ -72,7 +72,7 @@ fun TopAppBar(
         viewModel = viewModel
       )
 
-      // Add button
+      // Add task button
       TopNavigationButton(
         onOpenPage = onOpenCreateTask,
         modifier = Modifier.align(Alignment.Center),
@@ -83,7 +83,7 @@ fun TopAppBar(
         iconSize = 48.dp
       )
 
-      // Settings
+      // Settings button
       TopNavigationButton(
         onOpenPage = onOpenSettings,
         modifier = Modifier.align(Alignment.Center),
@@ -94,7 +94,7 @@ fun TopAppBar(
         iconSize = 30.dp
       )
 
-      // Bookshelf
+      // Bookshelf button
       TopNavigationButton(
         onOpenPage = onOpenBookshelf,
         modifier = Modifier.align(Alignment.Center),
@@ -121,6 +121,7 @@ private fun DateDisplay(topPadding: Dp, viewModel: HomeViewModel) {
 
   val dateOffsetY = if (hasTasks) 110.dp else (-128).dp
 
+  // Date texts
   val yearText = viewModel.yearText
   val dayText = viewModel.dayText
 

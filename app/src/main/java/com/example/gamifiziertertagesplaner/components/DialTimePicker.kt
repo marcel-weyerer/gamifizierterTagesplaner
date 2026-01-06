@@ -18,6 +18,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
+/**
+ * Reusable time picker dialog
+ *
+ * @param timePickerState    The state of the time picker
+ * @param title              The title of the dialog
+ * @param onDismiss          The callback to be invoked when the dialog is dismissed
+ * @param onConfirm          The callback to be invoked when the dialog is confirmed
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalMaterial3Api
 @Composable

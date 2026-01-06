@@ -30,8 +30,26 @@ class AuthViewModel(
     }
   }
 
+  // Load the user profile in a coroutine
+  fun loadUserProfile() {
+    viewModelScope.launch {
+      isLoading = true
+      errorMessage = null
+      try {
+        val profile = repository.loadCurrentUserProfile()
+        userProfile = profile
+      } catch (e: Exception) {
+        errorMessage = e.message
+      } finally {
+        isLoading = false
+      }
+    }
+  }
+
+  // Get current user
   fun repositoryCurrentUser(): FirebaseUser? = repository.currentUser()
 
+  // Register a new user
   fun register(
     email: String,
     password: String,
@@ -56,6 +74,7 @@ class AuthViewModel(
     }
   }
 
+  // Login an existing user
   fun login(
     email: String,
     password: String,
@@ -78,6 +97,7 @@ class AuthViewModel(
     }
   }
 
+  // Logout user
   fun logout(onLoggedOut: () -> Unit) {
     repository.logout()
     userProfile = null
@@ -85,10 +105,13 @@ class AuthViewModel(
     onLoggedOut()
   }
 
+  // Clear the error message
   fun clearError() {
     errorMessage = null
   }
 
+  // Update functions
+  // Update user name
   fun updateUsername(
     newUsername: String,
     onSuccess: () -> Unit = {}
@@ -111,6 +134,7 @@ class AuthViewModel(
     }
   }
 
+  // Update e-mail
   fun updateEmail(newEmail: String, onSuccess: () -> Unit = {}) {
     isLoading = true
     errorMessage = null
@@ -130,7 +154,7 @@ class AuthViewModel(
     }
   }
 
-
+  // Update password
   fun updatePassword(newPassword: String, onSuccess: () -> Unit = {}) {
     isLoading = true
     errorMessage = null
@@ -149,6 +173,28 @@ class AuthViewModel(
     }
   }
 
+  // Update create list reminder
+  fun updateCreateListReminder(minutes: Int?) {
+    viewModelScope.launch {
+      repository.updateCreateListReminder(minutes)
+    }
+  }
+
+  // Update end of day time
+  fun updateEndOfDay(timestamp: Timestamp) {
+    viewModelScope.launch {
+      repository.updateEndOfDay(timestamp)
+    }
+  }
+
+  // Update user points
+  fun updateUserPoints(points: Int) {
+    viewModelScope.launch {
+      repository.updateUserPoints(points)
+    }
+  }
+
+  // Buy item function
   fun buyShopItems(
     totalPrice: Int,
     bookAmount: Int,
@@ -177,24 +223,6 @@ class AuthViewModel(
         .onFailure { e ->
           errorMessage = e.message
         }
-    }
-  }
-
-  fun updateCreateListReminder(minutes: Int?) {
-    viewModelScope.launch {
-      repository.updateCreateListReminder(minutes)
-    }
-  }
-
-  fun updateEndOfDay(timestamp: Timestamp) {
-    viewModelScope.launch {
-      repository.updateEndOfDay(timestamp)
-    }
-  }
-
-  fun updateUserPoints(points: Int) {
-    viewModelScope.launch {
-      repository.updateUserPoints(points)
     }
   }
 }

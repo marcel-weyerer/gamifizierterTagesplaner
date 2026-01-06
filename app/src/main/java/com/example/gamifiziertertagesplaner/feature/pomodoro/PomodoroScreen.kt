@@ -13,6 +13,9 @@ import com.example.gamifiziertertagesplaner.components.BottomAppBarOption
 import com.example.gamifiziertertagesplaner.components.CustomBottomAppBar
 import com.example.gamifiziertertagesplaner.components.TopScreenTitle
 
+/**
+ * Skeleton of the Pomodoro screen
+ */
 @Composable
 fun PomodoroScreen(
   onOpenHome: () -> Unit,

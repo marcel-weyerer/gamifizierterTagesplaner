@@ -22,6 +22,9 @@ import com.example.gamifiziertertagesplaner.components.ActionButton
 import com.example.gamifiziertertagesplaner.components.TextInputField
 import com.example.gamifiziertertagesplaner.notifications.DailyReminderScheduler
 
+/**
+ * Bottom sheet content to change the user name
+ */
 @Composable
 fun UsernameContent(
   state: TextFieldState
@@ -35,7 +38,9 @@ fun UsernameContent(
   )
 }
 
-
+/**
+ * Bottom sheet content to change the profile picture
+ */
 @Composable
 fun ProfilePictureContent() {
   ActionButton(
@@ -47,7 +52,9 @@ fun ProfilePictureContent() {
   )
 }
 
-
+/**
+ * Bottom sheet content to change the password
+ */
 @Composable
 fun PasswordContent(
   newPasswordState: TextFieldState,
@@ -77,7 +84,9 @@ fun PasswordContent(
   }
 }
 
-
+/**
+ * Bottom sheet content to change the e-mail
+ */
 @Composable
 fun EmailContent(
   newEmailState: TextFieldState,
@@ -103,6 +112,9 @@ fun EmailContent(
   }
 }
 
+/**
+ * Bottom sheet content to change the end of day time
+ */
 @Composable
 fun EndOfDayContent(
   onOpenEndOfDay: () -> Unit
@@ -116,13 +128,16 @@ fun EndOfDayContent(
   )
 }
 
+/**
+ * Bottom sheet content to change the notification settings
+ */
 @Composable
 fun NotificationContent(
   onOpenDailyReminder: () -> Unit
 ) {
   val context = LocalContext.current
-  var checked1 by remember { mutableStateOf(false) }
 
+  var checked1 by remember { mutableStateOf(false) }
   LaunchedEffect(Unit) {
     checked1 = DailyReminderScheduler.isEnabled(context)
   }
@@ -130,6 +145,7 @@ fun NotificationContent(
   var checked2 by remember { mutableStateOf(true) }
   var checked3 by remember { mutableStateOf(true) }
 
+  // Show options to change each type of notification
   Column(
     modifier = Modifier
       .fillMaxWidth()
@@ -139,6 +155,7 @@ fun NotificationContent(
       modifier = Modifier.fillMaxWidth(),
       verticalAlignment = Alignment.CenterVertically
     ) {
+      // Daily reminder notification
       ActionButton(
         onClick = onOpenDailyReminder,
         modifier = Modifier
@@ -171,6 +188,7 @@ fun NotificationContent(
       )
     }
 
+    // Task start time notification
     Row(
       modifier = Modifier
         .padding(top = 12.dp)
@@ -200,6 +218,7 @@ fun NotificationContent(
       )
     }
 
+    // Task reminder notification
     Row(
       modifier = Modifier
         .padding(top = 12.dp)

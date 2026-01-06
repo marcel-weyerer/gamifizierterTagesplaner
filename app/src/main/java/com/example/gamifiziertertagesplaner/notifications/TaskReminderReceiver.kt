@@ -18,12 +18,11 @@ class TaskReminderReceiver : BroadcastReceiver() {
     val title = intent.getStringExtra(TaskReminderScheduler.EXTRA_TITLE) ?: "Erinnerung"
     val text = intent.getStringExtra(TaskReminderScheduler.EXTRA_TEXT) ?: "Aufgabe startet bald ✏️"
 
-    // safety: ignore if it was canceled but still fired
+    // Ignore if it was canceled but still fired
     if (!TaskReminderScheduler.isTaskScheduled(context, taskId)) return
 
     showNotification(context, taskId, title, text)
 
-    // one-shot cleanup
     TaskReminderScheduler.markFired(context, taskId)
   }
 

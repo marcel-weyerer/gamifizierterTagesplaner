@@ -99,6 +99,7 @@ fun SignUpScreen(
 
       Spacer(Modifier.height(48.dp))
 
+      // User name input
       TextInputField(
         state = usernameState,
         maxHeightLines = 1,
@@ -107,6 +108,7 @@ fun SignUpScreen(
 
       Spacer(Modifier.height(12.dp))
 
+      // E-Mail input
       TextInputField(
         state = emailState,
         maxHeightLines = 1,
@@ -115,6 +117,7 @@ fun SignUpScreen(
 
       Spacer(Modifier.height(12.dp))
 
+      // Password input
       TextInputField(
         state = passwordState,
         maxHeightLines = 1,
@@ -124,7 +127,7 @@ fun SignUpScreen(
 
       Spacer(Modifier.height(12.dp))
 
-      // Choose profile picture button
+      // Profile picture input
       ActionButton(
         onClick = { imagePickerLauncher.launch("image/*") },
         modifier = Modifier.fillMaxWidth(),

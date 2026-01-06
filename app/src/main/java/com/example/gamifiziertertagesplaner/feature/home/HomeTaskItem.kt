@@ -187,6 +187,7 @@ fun TaskView(
           modifier = Modifier.fillMaxSize(),
           contentAlignment = Alignment.Center
         ) {
+          // Show received points
           Text(
             text = "+${task.points} Punkte",
             style = MaterialTheme.typography.bodyMedium,
@@ -213,6 +214,10 @@ private fun MinimalInformation(
   onLongPressCheck: () -> Unit,
   isExpanded: Boolean
 ) {
+  val haptic = LocalHapticFeedback.current
+  val density = LocalDensity.current
+
+  // Setup text visual style depending on status
   val textColor = if (task.state == 0) {
     MaterialTheme.colorScheme.surfaceVariant
   } else {
@@ -225,9 +230,6 @@ private fun MinimalInformation(
     TextDecoration.None
   }
 
-  val haptic = LocalHapticFeedback.current
-
-  val density = LocalDensity.current
   val iconBoxSize = with(LocalDensity.current) { (50.dp).roundToPx() }
   var rowHeight by remember { mutableIntStateOf(0) }
 
@@ -271,6 +273,7 @@ private fun MinimalInformation(
           }
         )
     ) {
+      // Choose check circle depending on state
       val painterRes = when (task.state) {
         1 -> painterResource(R.drawable.check_state_1)
         2 -> painterResource(R.drawable.check_state_2)
@@ -342,6 +345,7 @@ private fun MinimalInformation(
         else -> Color.Transparent
       }
 
+      // Choose icon depending on state
       val painterRes = when (task.state) {
         2 -> painterResource(R.drawable.bookmark_long)
         else -> painterResource(R.drawable.bookmark_short)
@@ -552,6 +556,9 @@ private fun CustomAlertDialog(task: Task, viewModel: HomeViewModel, onHideDelete
   )
 }
 
+/**
+ * Builds a time string for a task depending on the presence of start time and or duration
+ */
 private fun buildTimeString(task: Task): String {
   val dateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
   var timeString = ""

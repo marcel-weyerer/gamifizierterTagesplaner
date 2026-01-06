@@ -39,14 +39,16 @@ fun BottomSheet(
         .fillMaxWidth()
         .padding(vertical = 48.dp, horizontal = 24.dp)
     ) {
-        Text(
-          modifier = Modifier.fillMaxWidth(),
-          text = title,
-          style = MaterialTheme.typography.bodyLarge,
-          color = MaterialTheme.colorScheme.onBackground,
-          textAlign = TextAlign.Center
-        )
+      // Bottom sheet title
+      Text(
+        modifier = Modifier.fillMaxWidth(),
+        text = title,
+        style = MaterialTheme.typography.bodyLarge,
+        color = MaterialTheme.colorScheme.onBackground,
+        textAlign = TextAlign.Center
+      )
 
+      // Settings description
       Text(
         modifier = Modifier
           .fillMaxWidth()
@@ -57,20 +59,24 @@ fun BottomSheet(
         textAlign = TextAlign.Center
       )
 
+      // Content of the bottom sheet depending on the settins type
       content()
 
+      // Buttons
       Row(
         modifier = Modifier
           .fillMaxWidth()
           .padding(top = 24.dp),
         horizontalArrangement = Arrangement.SpaceBetween
       ) {
+        // Cancel button
         ActionButton(
           onClick = onCancel,
           modifier = Modifier.width(150.dp),
           text = "Abbrechen"
         )
 
+        // Save button
         ActionButton(
           onClick = onSave,
           modifier = Modifier.width(150.dp),

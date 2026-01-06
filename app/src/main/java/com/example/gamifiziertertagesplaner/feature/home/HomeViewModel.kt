@@ -20,11 +20,6 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
   private val appContext = app.applicationContext
   private val repository: TaskRepository = TaskRepository()
 
-  // Get current date
-  private val today = Calendar.getInstance().time
-  val yearText: String = SimpleDateFormat("yyyy", Locale.getDefault()).format(today)
-  val dayText: String = SimpleDateFormat("dd MMM", Locale.getDefault()).format(today)
-
   // Firestore setup
   private val _tasks = MutableStateFlow<List<Task>>(emptyList())
   val tasks: StateFlow<List<Task>> = _tasks
@@ -40,8 +35,14 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
   private val _receivedPoints = MutableStateFlow(0)
   val receivedPoints: StateFlow<Int> = _receivedPoints
 
+  // Get current date
+  private val today = Calendar.getInstance().time
+  val yearText: String = SimpleDateFormat("yyyy", Locale.getDefault()).format(today)
+  val dayText: String = SimpleDateFormat("dd MMM", Locale.getDefault()).format(today)
+
   init {
     viewModelScope.launch {
+      // Load all tasks
       repository.observeTasks()
         .onStart { _isLoading.value = true }
         .catch { e ->
@@ -50,9 +51,10 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         }
         .collect { list ->
           _tasks.value = list
+          // Calculate total points and received points of current task list
           recalculatePoints()
 
-          // Schedule notifications for all tasks
+          // Schedule task-specific notifications for all tasks
           TaskNotificationSyncer.syncAll(appContext, list)
 
           _isLoading.value = false
@@ -60,12 +62,13 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
     }
   }
 
+  // Load all tasks
   fun loadTasks() {
     viewModelScope.launch {   // Start Coroutine to prevent blocking the UI thread
       _isLoading.value = true
       _errorMessage.value = null
       try {
-        val result = repository.getTasks()    // retrieve all tasks
+        val result = repository.getTasks()    // Get all tasks
         _tasks.value = result
 
         recalculatePoints()
@@ -80,6 +83,7 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
     }
   }
 
+  // Toggles the task status
   fun toggleTaskStatus(task: Task, isLongPress: Boolean) {
     viewModelScope.launch {
 
@@ -102,7 +106,7 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
       // Update notifications to not notify on done tasks
       TaskNotificationSyncer.syncOne(appContext, updated)
 
-      // Update backend so there is no reload on the UI
+      // Start coroutine to update the task
       try {
         repository.updateTask(updated)
       } catch (e: Exception) {
@@ -117,6 +121,7 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
     }
   }
 
+  // Delete a task from the task list
   fun deleteTask(taskId: String) {
     viewModelScope.launch {
       val removed = _tasks.value.firstOrNull { it.id == taskId }
@@ -128,7 +133,7 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
       // Don't notify on deleted tasks
       if (removed != null) TaskNotificationSyncer.cancel(appContext, removed)
 
-      // Update backend so there is no reload on the UI
+      // Start coroutine to delete task
       try {
         repository.deleteTask(taskId)
       } catch (e: Exception) {
@@ -137,6 +142,31 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
     }
   }
 
+  // Helper function to get the total number of tasks
+  fun getTaskCount(): Int {
+    return _tasks.value.size
+  }
+
+  // Helper function to get the number of finished tasks
+  fun getDoneTasks(): Int {
+    return _tasks.value.count { it.state == 0 }
+  }
+
+  // Helper function to automatically delete all finished tasks
+  fun deleteDoneTasks() {
+    viewModelScope.launch {
+      val result = repository.deleteAllFinishedTasks()
+      result
+        .onSuccess {
+          loadTasks()   // reload task list
+        }
+        .onFailure { e ->
+          _errorMessage.value = e.message
+        }
+    }
+  }
+
+  // Helper function to calculate the total number of points and received points
   private fun recalculatePoints() {
     val currentTasks = _tasks.value
 
@@ -145,26 +175,4 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
       .filter { it.state == 0 }
       .sumOf { it.points }
   }
-
-  fun getTaskCount(): Int {
-    return _tasks.value.size
-  }
-
-  fun getDoneTasks(): Int {
-    return _tasks.value.count { it.state == 0 }
-  }
-
-  fun deleteDoneTasks() {
-    viewModelScope.launch {
-      val result = repository.deleteAllUnfinishedTasks()
-      result
-        .onSuccess {
-          loadTasks()   // reload fresh list
-        }
-        .onFailure { e ->
-          _errorMessage.value = e.message
-        }
-    }
-  }
-
 }

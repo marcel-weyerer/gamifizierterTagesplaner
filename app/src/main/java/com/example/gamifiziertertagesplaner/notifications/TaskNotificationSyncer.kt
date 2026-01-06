@@ -4,17 +4,11 @@ import android.content.Context
 import com.example.gamifiziertertagesplaner.firestore.Task
 
 object TaskNotificationSyncer {
-
-  /**
-   * Sync one task:
-   * - schedule if startTime != null and state != 0 and time is in the future
-   * - else cancel
-   */
   fun syncOne(context: Context, task: Task) {
     val start = task.startTime
     val isDone = task.state == 0
 
-    // ---- start notification ----
+    // Task start time notification
     if (start == null || isDone) {
       TaskStartScheduler.cancelTaskStart(context, task.id)
     } else {
@@ -32,16 +26,17 @@ object TaskNotificationSyncer {
       }
     }
 
-    // ---- reminder notification ----
-    val reminderMinutes = task.reminder // Int? minutes before start
+    // Task reminder notification
+    val reminderMinutes = task.reminder
     if (start == null || isDone || reminderMinutes == null || reminderMinutes <= 0) {
       TaskReminderScheduler.cancelReminder(context, task.id)
       return
     }
 
     val reminderMillis = start.toDate().time - reminderMinutes.toLong() * 60_000L
+
+    // If reminder time has already passed, don't schedule an alarm
     if (reminderMillis <= System.currentTimeMillis()) {
-      // reminder time already passed -> don't schedule
       TaskReminderScheduler.cancelReminder(context, task.id)
       return
     }
@@ -55,9 +50,6 @@ object TaskNotificationSyncer {
     )
   }
 
-  /**
-   * Sync all tasks currently in memory, and cancel alarms for tasks no longer present.
-   */
   fun syncAll(context: Context, tasks: List<Task>) {
     tasks.forEach { syncOne(context, it) }
 

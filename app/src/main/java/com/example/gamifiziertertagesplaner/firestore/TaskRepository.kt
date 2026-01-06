@@ -13,14 +13,16 @@ class TaskRepository(
   private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 ) {
 
+  // Collection of tasks
   private val tasksCollection = db.collection("tasks")
 
-  /** Helper: get current user id or throw if not logged in */
+  // Helper function to get current user id
   private fun currentUserId(): String {
     return auth.currentUser?.uid
       ?: throw IllegalStateException("No logged in user")
   }
 
+  // Helper function to observe the tasks
   fun observeTasks(): Flow<List<Task>> = callbackFlow {
     val uid = auth.currentUser?.uid
       ?: run {
@@ -30,8 +32,6 @@ class TaskRepository(
 
     val query = tasksCollection
       .whereEqualTo("userId", uid)
-    // If you want server-side sorting, store priority as number and do:
-    // .orderBy("priority", Query.Direction.DESCENDING)
 
     val registration: ListenerRegistration = query.addSnapshotListener { snapshot, error ->
       if (error != null) {
@@ -50,10 +50,7 @@ class TaskRepository(
     awaitClose { registration.remove() }
   }
 
-  /**
-   * Get all tasks for the current user
-   * @return List of tasks
-   */
+  // Get all tasks from current user
   suspend fun getTasks(): List<Task> {
     val uid = currentUserId()
 
@@ -67,11 +64,7 @@ class TaskRepository(
       .sortedByDescending { it.priority }
   }
 
-  /**
-   * Add a new task
-   *
-   * @param task Task to add
-   */
+  // Add a new task to the task list
   suspend fun addTask(task: Task) {
     val uid = currentUserId()
 
@@ -86,11 +79,7 @@ class TaskRepository(
     docRef.set(taskWithMeta).await()
   }
 
-  /**
-   * Update an existing task
-   *
-   * @param task Task to update
-   */
+  // Update an existing task
   suspend fun updateTask(task: Task) {
     if (task.id.isBlank()) return
 
@@ -105,27 +94,24 @@ class TaskRepository(
       .await()
   }
 
-  /**
-   * Delete a task
-   *
-   * @param taskId ID of the task to delete
-   */
+  // Delete a task
   suspend fun deleteTask(taskId: String) {
     tasksCollection.document(taskId).delete().await()
   }
 
-  suspend fun deleteAllUnfinishedTasks(): Result<Unit> {
+  // Helper function to delete all finished tasks
+  suspend fun deleteAllFinishedTasks(): Result<Unit> {
     val uid = currentUserId()
 
     return try {
-      // 1) load all tasks with state == 0 for this user
+      // Load all tasks where state == 0 (done)
       val snapshot = tasksCollection
         .whereEqualTo("userId", uid)
         .whereEqualTo("state", 0)
         .get()
         .await()
 
-      // 2) delete them in a batch (max 500 docs)
+      // Delete them in a batch
       val batch = db.batch()
       snapshot.documents.forEach { doc ->
         batch.delete(doc.reference)
@@ -139,5 +125,4 @@ class TaskRepository(
       Result.failure(e)
     }
   }
-
 }

@@ -58,7 +58,22 @@ fun App() {
     }
   }
 
+  // If the user navigates to bookshelf screen, reload items
+  LaunchedEffect(currentRoute, currentUser) {
+    if (currentRoute == Routes.BOOKSHELF && currentUser != null) {
+      authViewModel.loadUserProfile()
+    }
+  }
+
+
   LaunchedEffect(currentUser, profile) {
+    // Only decide initial destination
+    val inStartupFlow = currentRoute == Routes.LOADING ||
+        currentRoute == Routes.LOGIN ||
+        currentRoute == Routes.SIGNUP
+
+    if (!inStartupFlow) return@LaunchedEffect
+
     when {
       // If no user is logged in navigate to the login screen
       currentUser == null -> {
@@ -85,47 +100,6 @@ fun App() {
       }
     }
   }
-
-  /*var initialNavigationDone by remember { mutableStateOf(false) }
-
-  LaunchedEffect(authViewModel.repositoryCurrentUser(), profile) {
-    if (initialNavigationDone) return@LaunchedEffect
-
-    val currentUser = authViewModel.repositoryCurrentUser()
-
-    when {
-      // If no user is logged in navigate to the login screen
-      currentUser == null -> {
-        navController.navigate(Routes.LOGIN) {
-          popUpTo(Routes.LOADING) { inclusive = true }
-        }
-        initialNavigationDone = true
-      }
-
-      // If user is logged in but profile is not loaded yet, just keep showing loading screen
-      profile == null -> { }
-
-      // User is logged in and profile is loaded
-      else -> {
-        // If the day has ended navigate to the EndOfDay screen, otherwise to the Home screen
-        val target = if (hasDayEnded(profile.endOfDayTime))
-          Routes.ENDOFDAY
-        else
-          Routes.HOME
-
-        if (target == Routes.HOME) {
-          homeViewModel.loadTasks()
-        }
-
-        navController.navigate(target) {
-          popUpTo(Routes.LOADING) { inclusive = true }
-        }
-
-        // Initial navigation is done
-        initialNavigationDone = true
-      }
-    }
-  }*/
 
   NavHost(
     navController = navController,
@@ -215,7 +189,12 @@ fun App() {
       ShopScreen(
         authViewModel = authViewModel,
         onOpenHome = { navController.navigate(Routes.HOME) { launchSingleTop = true } },
-        onOpenBookshelf = { navController.navigate(Routes.BOOKSHELF) },
+        onOpenBookshelf = {
+          navController.navigate(Routes.BOOKSHELF) {
+            popUpTo(Routes.SHOP) { inclusive = true }
+            launchSingleTop = true
+          }
+        },
         onOpenAchievements = { navController.navigate(Routes.ACHIEVEMENTS) }
       )
     }

@@ -13,11 +13,13 @@ class BootReceiver : BroadcastReceiver() {
       action != Intent.ACTION_LOCKED_BOOT_COMPLETED
     ) return
 
+    // Schedule create list reminder if it is not deactivated
     val (enabled, minutes) = DailyReminderScheduler.readSavedConfig(context)
     if (enabled) {
       DailyReminderScheduler.scheduleNextExact(context, minutes)
     }
 
+    // Schedule task-specific notifications
     TaskStartScheduler.rescheduleAllFromPrefs(context)
     TaskReminderScheduler.rescheduleAllFromPrefs(context)
   }

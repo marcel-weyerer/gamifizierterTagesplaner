@@ -33,7 +33,6 @@ class TaskStartReceiver : BroadcastReceiver() {
     val notificationManager =
       context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-    // Deep link into your app (you can route to task detail using extras)
     val openAppIntent = Intent(context, MainActivity::class.java).apply {
       putExtra("open_task_id", taskId)
       addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)

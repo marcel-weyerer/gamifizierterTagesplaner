@@ -13,6 +13,9 @@ import com.example.gamifiziertertagesplaner.components.BottomAppBarOption
 import com.example.gamifiziertertagesplaner.components.CustomBottomAppBar
 import com.example.gamifiziertertagesplaner.components.TopScreenTitle
 
+/**
+ * Skeleton for the achievements screen.
+ */
 @Composable
 fun AchievementsScreen(
   onOpenHome: () -> Unit,

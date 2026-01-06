@@ -31,6 +31,9 @@ import com.example.gamifiziertertagesplaner.firestore.AuthViewModel
 import com.example.gamifiziertertagesplaner.ui.theme.PriorityRed
 import kotlinx.coroutines.delay
 
+/**
+ * Login Screen
+ */
 @Composable
 fun LoginScreen(
   authViewModel: AuthViewModel,
@@ -44,7 +47,7 @@ fun LoginScreen(
   val isLoading = authViewModel.isLoading
   val error = authViewModel.errorMessage
 
-  // Hide error message after given time
+  // Hide error message after fixed time
   LaunchedEffect(error) {
     if (error != null) {
       delay(2000)
@@ -82,6 +85,7 @@ fun LoginScreen(
 
       Spacer(modifier = Modifier.height(100.dp))
 
+      // E-Mail input
       TextInputField(
         state = emailState,
         maxHeightLines = 1,
@@ -90,6 +94,7 @@ fun LoginScreen(
 
       Spacer(modifier = Modifier.height(24.dp))
 
+      // Password input
       TextInputField(
         state = passwordState,
         maxHeightLines = 1,

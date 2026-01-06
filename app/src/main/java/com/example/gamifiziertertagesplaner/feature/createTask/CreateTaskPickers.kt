@@ -49,6 +49,7 @@ fun ReminderPicker(
   onStateChange: (Int) -> Unit,
   enabled: Boolean
 ) {
+  // Reminder options in minutes
   val options = listOf(0, 5, 10, 30, 60)
 
   ExpandableRadioPicker(
@@ -57,6 +58,7 @@ fun ReminderPicker(
     onValueChange = { if (enabled) onStateChange(it) },
     options = options,
     labelFor = { minutes ->
+      // Labels for picker options
       when (minutes) {
         0 -> "Keine Erinnerung"
         5 -> "5 min vorher"
@@ -83,7 +85,7 @@ fun ReminderPicker(
 /**
  * Priority Picker
  *
- * @param value         The current value of the priority
+ * @param value       The current value of the priority
  */
 @Composable
 fun PriorityPicker(
@@ -91,6 +93,7 @@ fun PriorityPicker(
   value: Int,
   onValueChange: (Int) -> Unit
 ) {
+  // Priority options
   val options = listOf(1, 2, 3)
 
   ExpandableRadioPicker(
@@ -99,6 +102,7 @@ fun PriorityPicker(
     onValueChange = onValueChange,
     options = options,
     labelFor = { priority ->
+      // Labels for picker options
       when (priority) {
         1 -> "Hoch"
         2 -> "Mittel"
@@ -119,6 +123,18 @@ fun PriorityPicker(
   )
 }
 
+/**
+ * Expandable Radio Picker
+ *
+ * @param value           The current value of the picker
+ * @param onValueChange   The callback to be invoked when the value changes
+ * @param options         The list of options to be displayed
+ * @param labelFor        The callback to be invoked to get the label for a given option
+ * @param iconFor         The callback to be invoked to get the icon for a given option
+ * @param tintFor         The callback to be invoked to get the tint color for a given option
+ * @param iconOnly        Whether to display only the icon or the label and icon
+ * @param enabled         Whether the picker is enabled
+ */
 @Composable
 private fun <T> ExpandableRadioPicker(
   modifier: Modifier,
@@ -131,6 +147,7 @@ private fun <T> ExpandableRadioPicker(
   iconOnly: Boolean = false,
   enabled: Boolean = true
 ) {
+  // Determines if options are shown
   var expanded by remember { mutableStateOf(false) }
 
   Surface(
@@ -193,6 +210,12 @@ private fun <T> ExpandableRadioPicker(
   }
 }
 
+/**
+ * Picker Option Row
+ *
+ * @param text        The text to be displayed
+ * @param selected    Whether the option is selected
+ */
 @Composable
 private fun PickerOptionRow(
   text: String,

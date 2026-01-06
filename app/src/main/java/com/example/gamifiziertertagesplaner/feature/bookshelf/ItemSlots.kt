@@ -19,6 +19,7 @@ data class ItemSlot(
   val rotation: Float = 0f,          // for leaning items
 )
 
+// Books
 val bookSlots: List<ItemSlot> = listOf(
   ItemSlot(
     resId = R.drawable.book_1,
@@ -203,6 +204,7 @@ val bookSlots: List<ItemSlot> = listOf(
   ),
 )
 
+// Decoration
 val decorationSlots: List<ItemSlot> = listOf(
   ItemSlot(
     resId = R.drawable.decoration_1,
@@ -214,6 +216,7 @@ val decorationSlots: List<ItemSlot> = listOf(
   ),
 )
 
+// Plants
 val plantSlots: List<ItemSlot> = listOf(
   ItemSlot(
     resId = R.drawable.plant_1,

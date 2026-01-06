@@ -15,6 +15,9 @@ import com.example.gamifiziertertagesplaner.components.BottomAppBarOption
 import com.example.gamifiziertertagesplaner.components.CustomBottomAppBar
 import com.example.gamifiziertertagesplaner.firestore.Task
 
+/**
+ * Main Screen containing task list
+ */
 @Composable
 fun MainScreen(
   homeViewModel: HomeViewModel,
@@ -73,11 +76,9 @@ private fun HomeScreenContent(
   onOpenBookshelf: () -> Unit,
   onOpenSettings: () -> Unit
 ) {
-  viewModel.loadTasks()
-
   val tasks by viewModel.tasks.collectAsState()     // List of all tasks
-  val hasTasks = tasks.isNotEmpty()     // Flag if there are tasks
-  val circleOffsetY by animateDpAsState(
+  val hasTasks = tasks.isNotEmpty()          // Flag if there are tasks
+  val circleOffsetY by animateDpAsState(     // Animated top circle
     targetValue = if (hasTasks) (-175).dp else 0.dp,
     animationSpec = tween(600),
     label = "circleOffset"

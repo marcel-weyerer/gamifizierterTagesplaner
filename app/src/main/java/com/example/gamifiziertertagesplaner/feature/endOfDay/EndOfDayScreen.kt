@@ -20,22 +20,21 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.gamifiziertertagesplaner.components.ActionButton
+import com.example.gamifiziertertagesplaner.components.CircleBackground
 import com.example.gamifiziertertagesplaner.components.TaskProgressBar
 import com.example.gamifiziertertagesplaner.feature.home.HomeViewModel
 import com.example.gamifiziertertagesplaner.firestore.AuthViewModel
-import com.example.gamifiziertertagesplaner.ui.theme.Cream
-import com.example.gamifiziertertagesplaner.ui.theme.DarkBrown
-import com.example.gamifiziertertagesplaner.ui.theme.MediumBrown
 import com.google.firebase.Timestamp
 import java.time.ZoneId
 import java.util.Date
 
+/**
+ * End of day screen
+ */
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun EndOfDayScreen(
@@ -43,16 +42,17 @@ fun EndOfDayScreen(
   authViewModel: AuthViewModel,
   onOpenHome: () -> Unit
 ) {
+  // Received and total points used for progress bar
   val totalPoints by homeViewModel.totalPoints.collectAsState()
   val receivedPoints by homeViewModel.receivedPoints.collectAsState()
-
   val totalPointsText = "$receivedPoints Punkte verdient"
 
+  // Number of all tasks and done tasks
   val allTasks = homeViewModel.getTaskCount()
   val doneTasks = homeViewModel.getDoneTasks()
-
   val tasksText = "$doneTasks von $allTasks Tasks erledigt"
 
+  // Total user points
   val userPoints = (authViewModel.userProfile?.userPoints ?: 0) + receivedPoints
 
   BoxWithConstraints(
@@ -60,42 +60,7 @@ fun EndOfDayScreen(
       .fillMaxSize()
       .background(Color.White),
   ) {
-    // Circle background
-    Box(
-      modifier = Modifier
-        .fillMaxSize()
-        .drawBehind {
-          drawCircle(
-            color = Cream,
-            radius = (maxHeight / 3f).toPx(),
-            center = Offset(x = size.width / 2f, y = size.height / 2f + 200)
-          )
-        }
-    )
-
-    Box(
-      modifier = Modifier
-        .fillMaxSize()
-        .drawBehind {
-          drawCircle(
-            color = MediumBrown,
-            radius = (maxHeight / 3f).toPx(),
-            center = Offset(x = size.width / 2f, y = size.height / 3f + 175)
-          )
-        }
-    )
-
-    Box(
-      modifier = Modifier
-        .fillMaxSize()
-        .drawBehind {
-          drawCircle(
-            color = DarkBrown,
-            radius = (maxHeight / 3f).toPx(),
-            center = Offset(x = size.width / 2f, y = 0f)
-          )
-        }
-    )
+    CircleBackground(maxHeight)
 
     Column(
       modifier = Modifier
@@ -120,6 +85,7 @@ fun EndOfDayScreen(
 
       Spacer(modifier = Modifier.height(100.dp))
 
+      // Amount of done tasks
       Text(
         text = tasksText,
         style = MaterialTheme.typography.bodyMedium,
@@ -128,6 +94,7 @@ fun EndOfDayScreen(
 
       Spacer(modifier = Modifier.height(24.dp))
 
+      // Progress in progress bar
       TaskProgressBar(
         receivedPoints = receivedPoints,
         totalPoints = totalPoints
@@ -135,6 +102,7 @@ fun EndOfDayScreen(
 
       Spacer(modifier = Modifier.height(24.dp))
 
+      // Total points received
       Text(
         text = totalPointsText,
         style = MaterialTheme.typography.bodyLarge,
@@ -143,6 +111,7 @@ fun EndOfDayScreen(
 
       Spacer(modifier = Modifier.height(48.dp))
 
+      // New total user points
       Text(
         text = "Neuer Punktestand",
         style = MaterialTheme.typography.bodyMedium,
@@ -155,23 +124,24 @@ fun EndOfDayScreen(
         color = MaterialTheme.colorScheme.onPrimary,
       )
 
-      Spacer(modifier = Modifier.height(48.dp))
+      Spacer(modifier = Modifier.height(65.dp))
 
+      // Reset end of day time and revert to home screen
       ActionButton(
         onClick = {
           val endOfDayTime = authViewModel.userProfile?.endOfDayTime
 
           val newEndOfDayTime = endOfDayTime?.let { ts ->
-            // Convert Timestamp -> LocalDateTime
+            // Convert Timestamp to LocalDateTime
             val currentLdt = ts.toDate()
               .toInstant()
               .atZone(ZoneId.systemDefault())
               .toLocalDateTime()
 
-            // Same clock time, next day
+            // Same time next day
             val nextDayLdt = currentLdt.plusDays(1)
 
-            // LocalDateTime -> Timestamp
+            // Convert back to Timestamp
             val nextInstant = nextDayLdt
               .atZone(ZoneId.systemDefault())
               .toInstant()
@@ -179,9 +149,11 @@ fun EndOfDayScreen(
             Timestamp(Date.from(nextInstant))
           }
 
+          // Set same time next day
           if (newEndOfDayTime != null)
             authViewModel.updateEndOfDay(newEndOfDayTime)
 
+          // Update user points, delete done tasks and open home screen
           authViewModel.updateUserPoints(userPoints)
           homeViewModel.deleteDoneTasks()
           onOpenHome()

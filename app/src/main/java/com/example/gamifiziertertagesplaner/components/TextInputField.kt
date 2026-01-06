@@ -55,7 +55,7 @@ fun TextInputField(
   val focusManager = LocalFocusManager.current
   val imeVisible = WindowInsets.isImeVisible
 
-  // When the keyboard closes, remove focus from the field
+  // When the keyboard closes, remove focus from the field for improved UX
   LaunchedEffect(imeVisible) {
     if (!imeVisible) {
       focusManager.clearFocus()
@@ -93,6 +93,7 @@ fun TextInputField(
         }
       } else null,
       trailingIcon = {
+        // Add trailing eye icon to show hidden input
         if (hideInput) {
           IconButton(
             modifier = Modifier.focusProperties { canFocus = false },
