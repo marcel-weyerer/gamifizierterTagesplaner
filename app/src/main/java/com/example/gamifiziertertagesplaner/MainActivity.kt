@@ -24,6 +24,9 @@ class MainActivity : ComponentActivity() {
     createNotificationChannel()
   }
 
+  /**
+   * Creates the notification channel for all notifications
+   */
   private fun createNotificationChannel() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
       val channel = NotificationChannel(
@@ -31,7 +34,7 @@ class MainActivity : ComponentActivity() {
         "Daily task reminders",
         NotificationManager.IMPORTANCE_DEFAULT
       ).apply {
-        description = "Reminders to create your task list"
+        description = "Reminders for tasks"
       }
 
       val manager = getSystemService(NotificationManager::class.java)

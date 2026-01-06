@@ -19,6 +19,7 @@ class BootReceiver : BroadcastReceiver() {
     }
 
     TaskStartScheduler.rescheduleAllFromPrefs(context)
+    TaskReminderScheduler.rescheduleAllFromPrefs(context)
   }
 }
 

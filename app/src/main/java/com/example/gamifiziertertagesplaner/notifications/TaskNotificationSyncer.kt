@@ -14,23 +14,44 @@ object TaskNotificationSyncer {
     val start = task.startTime
     val isDone = task.state == 0
 
+    // ---- start notification ----
     if (start == null || isDone) {
       TaskStartScheduler.cancelTaskStart(context, task.id)
+    } else {
+      val startMillis = start.toDate().time
+      if (startMillis > System.currentTimeMillis()) {
+        TaskStartScheduler.scheduleTaskStart(
+          context = context,
+          taskId = task.id,
+          triggerAtMillis = startMillis,
+          title = task.title,
+          text = "Starte jetzt den Task"
+        )
+      } else {
+        TaskStartScheduler.cancelTaskStart(context, task.id)
+      }
+    }
+
+    // ---- reminder notification ----
+    val reminderMinutes = task.reminder // Int? minutes before start
+    if (start == null || isDone || reminderMinutes == null || reminderMinutes <= 0) {
+      TaskReminderScheduler.cancelReminder(context, task.id)
       return
     }
 
-    val triggerAtMillis = start.toDate().time
-    if (triggerAtMillis <= System.currentTimeMillis()) {
-      TaskStartScheduler.cancelTaskStart(context, task.id)
+    val reminderMillis = start.toDate().time - reminderMinutes.toLong() * 60_000L
+    if (reminderMillis <= System.currentTimeMillis()) {
+      // reminder time already passed -> don't schedule
+      TaskReminderScheduler.cancelReminder(context, task.id)
       return
     }
 
-    TaskStartScheduler.scheduleTaskStart(
+    TaskReminderScheduler.scheduleReminder(
       context = context,
       taskId = task.id,
-      triggerAtMillis = triggerAtMillis,
-      title = "${task.title}",
-      text = "Starte jetzt den Task."
+      triggerAtMillis = reminderMillis,
+      title = task.title,
+      text = "Startet in $reminderMinutes min ✏️"
     )
   }
 
@@ -38,17 +59,19 @@ object TaskNotificationSyncer {
    * Sync all tasks currently in memory, and cancel alarms for tasks no longer present.
    */
   fun syncAll(context: Context, tasks: List<Task>) {
-    // 1) schedule/cancel for each current task
     tasks.forEach { syncOne(context, it) }
 
-    // 2) cancel orphaned alarms (tasks deleted or user switched)
-    // This requires TaskStartScheduler to expose the ids it has stored.
     val currentIds = tasks.map { it.id }.toSet()
-    val scheduledIds = TaskStartScheduler.getScheduledTaskIds(context)
 
-    val orphaned = scheduledIds.filter { it !in currentIds }
-    orphaned.forEach { TaskStartScheduler.cancelTaskStart(context, it) }
+    TaskStartScheduler.getScheduledTaskIds(context)
+      .filter { it !in currentIds }
+      .forEach { TaskStartScheduler.cancelTaskStart(context, it) }
+
+    TaskReminderScheduler.getScheduledTaskIds(context)
+      .filter { it !in currentIds }
+      .forEach { TaskReminderScheduler.cancelReminder(context, it) }
   }
+
 
   fun cancel(context: Context, task: Task) {
     TaskStartScheduler.cancelTaskStart(context, task.id)

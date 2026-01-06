@@ -22,9 +22,12 @@ import com.example.gamifiziertertagesplaner.ui.theme.shadowElevation
 /**
  * Reusable action button
  *
- * @param onClick        The callback to be invoked when the button is clicked
- * @param text           The text to be displayed on the button
- * @param isPrimary      Whether the button should be primary or secondary
+ * @param onClick         The callback to be invoked when the button is clicked
+ * @param text            The text to be displayed on the button
+ * @param isPrimary       Whether the button should be primary or secondary
+ * @param leadingIcon     Optional leading icon to be displayed on the button
+ * @param isPrimary       Whether the button is primary or not
+ * @param enabled         Whether the button is enabled or not
  */
 @Composable
 fun ActionButton(
@@ -38,6 +41,7 @@ fun ActionButton(
   var containerColor: Color
   var contentColor: Color
 
+  // Determine button colors based on primary or secondary
   if (isPrimary) {
     containerColor = MaterialTheme.colorScheme.primary
     contentColor = MaterialTheme.colorScheme.onPrimary
@@ -63,7 +67,7 @@ fun ActionButton(
   ) {
     Row {
       if (leadingIcon != null) {
-        Icon(
+        Icon(     // Optional leading icon
           modifier = Modifier.size(20.dp),
           painter = leadingIcon,
           contentDescription = "subtract"
@@ -72,7 +76,7 @@ fun ActionButton(
         Spacer(modifier = Modifier.width(12.dp))
       }
 
-      Text(
+      Text(     // Button text
         text = text,
         style = MaterialTheme.typography.bodyMedium,
       )

@@ -34,15 +34,59 @@ import java.time.ZoneId
 fun App() {
   // Setup navigation to all composable screens
   val navController = rememberNavController()
+
+  // Setup view models used by the components
   val authViewModel: AuthViewModel = viewModel()
   val homeViewModel: HomeViewModel = viewModel()
 
+  // Get user profile
   val profile = authViewModel.userProfile
+  val currentUser = authViewModel.repositoryCurrentUser()
 
-  // Task currently being edited (null = create mode)
+  // If a task should be edited it is stored here
   var taskToEdit by remember { mutableStateOf<Task?>(null) }
 
-  var initialNavigationDone by remember { mutableStateOf(false) }
+  // Current route
+  val navBackStackEntry by navController.currentBackStackEntryAsState()
+  val currentRoute = navBackStackEntry?.destination?.route
+
+  // If user is logged in and profile is loaded
+  // If the user navigates to home screen, reload the tasks
+  LaunchedEffect(currentRoute, currentUser, profile) {
+    if (currentRoute == Routes.HOME && currentUser != null && profile != null) {
+      homeViewModel.loadTasks()
+    }
+  }
+
+  LaunchedEffect(currentUser, profile) {
+    when {
+      // If no user is logged in navigate to the login screen
+      currentUser == null -> {
+        navController.navigate(Routes.LOGIN) {
+          popUpTo(Routes.LOADING) { inclusive = true }
+        }
+      }
+
+      // If user is logged in but profile is not loaded yet, just keep showing loading screen
+      profile == null -> { }
+
+      // User is logged in and profile is loaded
+      else -> {
+        // If the day has ended navigate to the EndOfDay screen, otherwise to the Home screen
+        val target = if (hasDayEnded(profile.endOfDayTime))
+          Routes.ENDOFDAY
+        else
+          Routes.HOME
+
+        navController.navigate(target) {
+          popUpTo(Routes.LOADING) { inclusive = true }
+          launchSingleTop = true
+        }
+      }
+    }
+  }
+
+  /*var initialNavigationDone by remember { mutableStateOf(false) }
 
   LaunchedEffect(authViewModel.repositoryCurrentUser(), profile) {
     if (initialNavigationDone) return@LaunchedEffect
@@ -50,6 +94,7 @@ fun App() {
     val currentUser = authViewModel.repositoryCurrentUser()
 
     when {
+      // If no user is logged in navigate to the login screen
       currentUser == null -> {
         navController.navigate(Routes.LOGIN) {
           popUpTo(Routes.LOADING) { inclusive = true }
@@ -57,12 +102,16 @@ fun App() {
         initialNavigationDone = true
       }
 
-      profile == null -> {
-        // Keep showing LoadingScreen when user is logged in, but profile not loaded yet
-      }
+      // If user is logged in but profile is not loaded yet, just keep showing loading screen
+      profile == null -> { }
 
+      // User is logged in and profile is loaded
       else -> {
-        val target = if (hasDayEnded(profile.endOfDayTime)) Routes.ENDOFDAY else Routes.HOME
+        // If the day has ended navigate to the EndOfDay screen, otherwise to the Home screen
+        val target = if (hasDayEnded(profile.endOfDayTime))
+          Routes.ENDOFDAY
+        else
+          Routes.HOME
 
         if (target == Routes.HOME) {
           homeViewModel.loadTasks()
@@ -71,10 +120,12 @@ fun App() {
         navController.navigate(target) {
           popUpTo(Routes.LOADING) { inclusive = true }
         }
+
+        // Initial navigation is done
         initialNavigationDone = true
       }
     }
-  }
+  }*/
 
   NavHost(
     navController = navController,
@@ -120,7 +171,10 @@ fun App() {
           taskToEdit = task              // store the task to edit
           navController.navigate(Routes.EDIT_TASK)
         },
-        onOpenHome = { navController.navigate(Routes.HOME) },
+        onOpenHome = {
+          // Refresh when pressing home icon
+          navController.navigate(Routes.HOME) { launchSingleTop = true }
+        },
         onOpenBookshelf = { navController.navigate(Routes.BOOKSHELF) },
         onOpenSettings = { navController.navigate(Routes.SETTINGS) },
         onOpenPomodoro = { navController.navigate(Routes.POMODORO) }
@@ -129,31 +183,21 @@ fun App() {
 
     composable(Routes.CREATE_TASK) {  // Create Task Screen
       CreateTaskScreen(
-        onCancel = {
-          homeViewModel.loadTasks()
-          navController.navigate(Routes.HOME) {
-            popUpTo(Routes.HOME) { inclusive = true }
-          }
-        }
+        onCancel = { navController.popBackStack() }
       )
     }
 
     composable(Routes.EDIT_TASK) {    // Edit Task Screen
       CreateTaskScreen(
         taskToEdit = taskToEdit,
-        onCancel = {
-          homeViewModel.loadTasks()
-          navController.navigate(Routes.HOME) {
-            popUpTo(Routes.HOME) { inclusive = true }
-          }
-        }
+        onCancel = { navController.popBackStack() }
       )
     }
 
     composable(Routes.BOOKSHELF) {    // Bookshelf Screen
       BookshelfScreen(
         authViewModel = authViewModel,
-        onOpenHome = { navController.navigate(Routes.HOME) },
+        onOpenHome = { navController.navigate(Routes.HOME) { launchSingleTop = true } },
         onOpenAchievements = { navController.navigate(Routes.ACHIEVEMENTS) },
         onOpenShop = { navController.navigate(Routes.SHOP) }
       )
@@ -161,7 +205,7 @@ fun App() {
 
     composable(Routes.ACHIEVEMENTS) {    // Achievements Screen
       AchievementsScreen(
-        onOpenHome = { navController.navigate(Routes.HOME) },
+        onOpenHome = { navController.navigate(Routes.HOME) { launchSingleTop = true } },
         onOpenBookshelf = { navController.navigate(Routes.BOOKSHELF) },
         onOpenShop = { navController.navigate(Routes.SHOP) }
       )
@@ -170,7 +214,7 @@ fun App() {
     composable(Routes.SHOP) {    // Shop Screen
       ShopScreen(
         authViewModel = authViewModel,
-        onOpenHome = { navController.navigate(Routes.HOME) },
+        onOpenHome = { navController.navigate(Routes.HOME) { launchSingleTop = true } },
         onOpenBookshelf = { navController.navigate(Routes.BOOKSHELF) },
         onOpenAchievements = { navController.navigate(Routes.ACHIEVEMENTS) }
       )
@@ -179,16 +223,20 @@ fun App() {
     composable(Routes.SETTINGS) {    // Settings Screen
       SettingsScreen(
         authViewModel = authViewModel,
-        onOpenHome = { navController.navigate(Routes.HOME) },
+        onOpenHome = { navController.navigate(Routes.HOME) { launchSingleTop = true } },
         onOpenPomodoro = { navController.navigate(Routes.POMODORO) },
         onOpenBookshelf = { navController.navigate(Routes.BOOKSHELF) },
-        onLoggedOut = { navController.navigate(Routes.LOGIN) }
+        onLoggedOut = {
+          navController.navigate(Routes.LOGIN) {
+            popUpTo(Routes.HOME) { inclusive = true }
+          }
+        }
       )
     }
 
     composable(Routes.POMODORO) {    // Pomodoro Screen
       PomodoroScreen(
-        onOpenHome = { navController.navigate(Routes.HOME) },
+        onOpenHome = { navController.navigate(Routes.HOME) { launchSingleTop = true } },
         onOpenSettings = { navController.navigate(Routes.SETTINGS) },
         onOpenBookshelf = { navController.navigate(Routes.BOOKSHELF) }
       )
@@ -198,7 +246,7 @@ fun App() {
       EndOfDayScreen(
         homeViewModel = homeViewModel,
         authViewModel = authViewModel,
-        onOpenHome = { navController.navigate(Routes.HOME) }
+        onOpenHome = { navController.navigate(Routes.HOME) { launchSingleTop = true } }
       )
     }
   }
@@ -206,7 +254,8 @@ fun App() {
 
 @RequiresApi(Build.VERSION_CODES.O)
 fun hasDayEnded(endOfDayTime: Timestamp?): Boolean {
-  if (endOfDayTime == null) return false
+  if (endOfDayTime == null)
+    return false
 
   val endDateTime = endOfDayTime.toDate()
     .toInstant()

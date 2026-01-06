@@ -19,6 +19,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.gamifiziertertagesplaner.ui.theme.cornerRadius
 
+/**
+ * Reusable bottom app bar
+ *
+ * @param options     List of bottom app bar icons
+ */
 @Composable
 fun CustomBottomAppBar(options: List<BottomAppBarOption>) {
   // Surface of BottomAppBar with rounded corners

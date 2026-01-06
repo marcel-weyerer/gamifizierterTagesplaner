@@ -12,11 +12,11 @@ import com.example.gamifiziertertagesplaner.ui.theme.DarkBrown
 import com.example.gamifiziertertagesplaner.ui.theme.MediumBrown
 
 /**
- * Circle background for the login screen and end of day screen.
+ * Circle background for the login screen, signup screen and end of day screen.
  */
 @Composable
 fun CircleBackground(maxHeight: Dp) {
-  // Circles Background
+  // Draw circles at different positions to create a gradient background
   Box(
     modifier = Modifier
       .fillMaxSize()

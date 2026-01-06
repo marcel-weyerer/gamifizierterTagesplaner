@@ -10,24 +10,29 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 
+/**
+ * Composable used to ask the user for permission to send notifications
+ */
 @Composable
 fun NotificationPermissionRequest() {
   val context = LocalContext.current
 
-  // Only Android 13+ needs this permission
-  if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+  // Permission is not needed before Android 13
+  if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU)
+    return
 
   val permission = Manifest.permission.POST_NOTIFICATIONS
 
-  // Check current permission state
+  // Check if app already has permission
   val hasPermission = ContextCompat.checkSelfPermission(
     context,
     permission
   ) == PackageManager.PERMISSION_GRANTED
 
-  if (hasPermission) return
+  if (hasPermission)
+    return
 
-  // Launcher to request permission
+  // Request permission
   val launcher = rememberLauncherForActivityResult(
     contract = ActivityResultContracts.RequestPermission()
   ) {  }
