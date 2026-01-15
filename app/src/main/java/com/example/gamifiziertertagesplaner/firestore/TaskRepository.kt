@@ -12,10 +12,6 @@ class TaskRepository(
   private val db: FirebaseFirestore = FirebaseFirestore.getInstance(),
   private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 ) {
-
-  // Collection of tasks
-  private val tasksCollection = db.collection("tasks")
-
   // Helper function to get current user id
   private fun currentUserId(): String {
     return auth.currentUser?.uid
@@ -24,14 +20,15 @@ class TaskRepository(
 
   // Helper function to observe the tasks
   fun observeTasks(): Flow<List<Task>> = callbackFlow {
-    val uid = auth.currentUser?.uid
-      ?: run {
-        close(IllegalStateException("No logged in user"))
-        return@callbackFlow
-      }
+    val user = auth.currentUser
+    if (user == null) {
+      trySend(emptyList())
+      close()
+      return@callbackFlow
+    }
 
-    val query = tasksCollection
-      .whereEqualTo("userId", uid)
+    val uid = currentUserId()
+    val query = tasksRef(uid)
 
     val registration: ListenerRegistration = query.addSnapshotListener { snapshot, error ->
       if (error != null) {
@@ -41,7 +38,6 @@ class TaskRepository(
 
       val tasks = snapshot?.documents
         ?.mapNotNull { doc -> doc.toObject(Task::class.java)?.copy(id = doc.id) }
-        ?.sortedByDescending { it.priority } // local sort if you don't orderBy in query
         ?: emptyList()
 
       trySend(tasks)
@@ -54,14 +50,10 @@ class TaskRepository(
   suspend fun getTasks(): List<Task> {
     val uid = currentUserId()
 
-    val snapshot = tasksCollection
-      .whereEqualTo("userId", uid)
-      .get()
-      .await()
+    val snapshot = tasksRef(uid).get().await()
 
     return snapshot.documents
       .mapNotNull { doc -> doc.toObject(Task::class.java)?.copy(id = doc.id) }
-      .sortedByDescending { it.priority }
   }
 
   // Add a new task to the task list
@@ -69,34 +61,31 @@ class TaskRepository(
     val uid = currentUserId()
 
     // Create document first to get its ID
-    val docRef = tasksCollection.document()
+    val docRef = tasksRef(uid).document()
+    val taskWithId = task.copy(id = docRef.id)
 
-    val taskWithMeta = task.copy(
-      id = docRef.id,
-      userId = uid
-    )
-
-    docRef.set(taskWithMeta).await()
+    docRef.set(taskWithId).await()
   }
 
   // Update an existing task
   suspend fun updateTask(task: Task) {
-    if (task.id.isBlank()) return
+    if (task.id.isBlank())
+      return
 
     val uid = currentUserId()
 
-    val updatedTask = task.copy(
-      userId = uid
-    )
-
-    tasksCollection.document(updatedTask.id)
-      .set(updatedTask)
+    tasksRef(uid).document(task.id)
+      .set(task)
       .await()
   }
 
   // Delete a task
   suspend fun deleteTask(taskId: String) {
-    tasksCollection.document(taskId).delete().await()
+    val uid = currentUserId()
+
+    tasksRef(uid).document(taskId)
+      .delete()
+      .await()
   }
 
   // Helper function to delete all finished tasks
@@ -105,8 +94,7 @@ class TaskRepository(
 
     return try {
       // Load all tasks where state == 0 (done)
-      val snapshot = tasksCollection
-        .whereEqualTo("userId", uid)
+      val snapshot = tasksRef(uid)
         .whereEqualTo("state", 0)
         .get()
         .await()
@@ -125,4 +113,8 @@ class TaskRepository(
       Result.failure(e)
     }
   }
+
+  // Helper function to get the tasks collection for a user
+  private fun tasksRef(uid: String) =
+    db.collection("users").document(uid).collection("tasks")
 }
