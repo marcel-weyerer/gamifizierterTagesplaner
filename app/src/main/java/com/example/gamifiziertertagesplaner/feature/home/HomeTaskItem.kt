@@ -65,11 +65,9 @@ import com.example.gamifiziertertagesplaner.ui.theme.PriorityYellow
 import com.example.gamifiziertertagesplaner.ui.theme.cornerRadius
 import com.example.gamifiziertertagesplaner.ui.theme.focusedShadowElevation
 import com.example.gamifiziertertagesplaner.ui.theme.shadowElevation
+import com.example.gamifiziertertagesplaner.util.buildTimeString
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 /**
  * Composable for a single task. It contains all information about the task and options to delete
@@ -559,7 +557,7 @@ private fun CustomAlertDialog(task: Task, viewModel: HomeViewModel, onHideDelete
 /**
  * Builds a time string for a task depending on the presence of start time and or duration
  */
-private fun buildTimeString(task: Task): String {
+/*private fun buildTimeString(task: Task): String {
   val dateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
   var timeString = ""
 
@@ -583,4 +581,4 @@ private fun buildTimeString(task: Task): String {
   }
 
   return timeString
-}
+}*/

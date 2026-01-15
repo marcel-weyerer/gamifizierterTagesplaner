@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.gamifiziertertagesplaner.firestore.Task
 import com.example.gamifiziertertagesplaner.firestore.TaskRepository
 import com.example.gamifiziertertagesplaner.notifications.TaskNotificationSyncer
+import com.example.gamifiziertertagesplaner.util.computePoints
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -52,7 +53,7 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         .collect { list ->
           _tasks.value = list
           // Calculate total points and received points of current task list
-          recalculatePoints()
+          updatePoints(list)
 
           // Schedule task-specific notifications for all tasks
           TaskNotificationSyncer.syncAll(appContext, list)
@@ -71,7 +72,7 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         val result = repository.getTasks()    // Get all tasks
         _tasks.value = result
 
-        recalculatePoints()
+        updatePoints(result)
 
         // Schedule notifications for all tasks
         TaskNotificationSyncer.syncAll(appContext, result)
@@ -101,7 +102,7 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         if (current.id == task.id) updated else current
       }
 
-      recalculatePoints()
+      updatePoints(_tasks.value)
 
       // Update notifications to not notify on done tasks
       TaskNotificationSyncer.syncOne(appContext, updated)
@@ -116,7 +117,7 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
           if (current.id == task.id) task else current
         }
 
-        recalculatePoints()
+        updatePoints(_tasks.value)
       }
     }
   }
@@ -128,7 +129,7 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
       // Update UI list locally
       _tasks.value = _tasks.value.filterNot { it.id == taskId }
 
-      recalculatePoints()
+      updatePoints(_tasks.value)
 
       // Don't notify on deleted tasks
       if (removed != null) TaskNotificationSyncer.cancel(appContext, removed)
@@ -166,13 +167,11 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
     }
   }
 
-  // Helper function to calculate the total number of points and received points
-  private fun recalculatePoints() {
-    val currentTasks = _tasks.value
+  // Helper function to update total and received points
+  private fun updatePoints(tasks: List<Task>) {
+    val summary = computePoints(tasks)
 
-    _totalPoints.value = currentTasks.sumOf { it.points }
-    _receivedPoints.value = currentTasks
-      .filter { it.state == 0 }
-      .sumOf { it.points }
+    _totalPoints.value = summary.totalPoints
+    _receivedPoints.value = summary.receivedPoints
   }
 }
